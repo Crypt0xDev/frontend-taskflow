@@ -1,0 +1,91 @@
+"use client";
+
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+
+import { apiFetch, clearToken, getToken, setToken } from "@/lib/api";
+
+export type Role = "admin" | "user";
+
+export type User = {
+  id: number;
+  username: string;
+  email?: string | null;
+  role: Role;
+  birth_date?: string | null;
+  age?: number | null;
+  avatar?: string | null;
+  must_change_password?: boolean;
+  created_at: string;
+};
+
+type SessionValue = {
+  user: User | null;
+  loading: boolean;
+  isAdmin: boolean;
+  login: (token: string, user: User) => void;
+  updateUser: (patch: Partial<User>) => void;
+  logout: () => Promise<void>;
+};
+
+const SessionContext = createContext<SessionValue | null>(null);
+
+export function SessionProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    function handleUnauthorized() {
+      setUser(null);
+      setLoading(false);
+    }
+
+    window.addEventListener("taskflow:unauthorized", handleUnauthorized);
+    void Promise.resolve().then(() => {
+      const token = getToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      return apiFetch<User>("/me")
+        .then(setUser)
+        .catch(() => clearToken())
+        .finally(() => setLoading(false));
+    });
+
+    return () => window.removeEventListener("taskflow:unauthorized", handleUnauthorized);
+  }, []);
+
+  const login = useCallback((token: string, nextUser: User) => {
+    setToken(token);
+    setUser(nextUser);
+  }, []);
+
+  const updateUser = useCallback((patch: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await apiFetch("/logout", { method: "POST" });
+    } catch {
+    }
+    clearToken();
+    setUser(null);
+  }, []);
+
+  return (
+    <SessionContext.Provider
+      value={{ user, loading, isAdmin: user?.role === "admin", login, updateUser, logout }}
+    >
+      {children}
+    </SessionContext.Provider>
+  );
+}
+
+export function useSession(): SessionValue {
+  const ctx = useContext(SessionContext);
+  if (!ctx) {
+    throw new Error("useSession must be used within a SessionProvider");
+  }
+  return ctx;
+}
