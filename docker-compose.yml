@@ -1,0 +1,17 @@
+# Compose de referencia para el frontend Next.js.
+# El backend corre por separado (ver backend-taskflow); este servicio
+# solo necesita saber la URL pública de su API.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Se hornea en el bundle en build. Apunta al backend accesible
+        # desde el navegador del usuario, no desde dentro del contenedor.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
