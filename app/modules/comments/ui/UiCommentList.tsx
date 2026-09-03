@@ -8,10 +8,11 @@ import type { Comment } from "../type";
 type Props = {
   comments: Comment[];
   isAdmin: boolean;
+  currentUserId?: number;
   onRemove: (id: number) => void;
 };
 
-export function UiCommentList({ comments, isAdmin, onRemove }: Props) {
+export function UiCommentList({ comments, isAdmin, currentUserId, onRemove }: Props) {
   if (comments.length === 0) {
     return (
       <p className="py-8 text-center text-ink-400">
@@ -36,7 +37,7 @@ export function UiCommentList({ comments, isAdmin, onRemove }: Props) {
                 {new Date(c.created_at).toLocaleDateString("es")}
               </p>
             </div>
-            {isAdmin && (
+            {(isAdmin || c.author?.id === currentUserId) && (
               <Button
                 variant="ghost"
                 size="sm"

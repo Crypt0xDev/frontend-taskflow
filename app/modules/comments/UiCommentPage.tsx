@@ -34,7 +34,7 @@ export default function UiCommentPage({ initial }: { initial: Comment[] }) {
             para dejar un comentario.
           </div>
         )}
-        <UiCommentList comments={comments} isAdmin={isAdmin} onRemove={remove} />
+        <UiCommentList comments={comments} isAdmin={isAdmin} currentUserId={user?.id} onRemove={remove} />
       </div>
     </main>
   );

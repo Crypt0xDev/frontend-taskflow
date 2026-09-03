@@ -8,32 +8,34 @@ import { UiNavUser } from "@/components/UiNavUser";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useSession } from "@/lib/session";
 
-type NavItem = { href: string; label: string; icon: (p: { className?: string }) => React.ReactNode };
+type NavItem = {
+  href: string;
+  label: string;
+  icon: (p: { className?: string }) => React.ReactNode;
+  permission?: [module: string, action: string];
+};
 
 export function UiAppSidebar() {
-  const { isAdmin } = useSession();
+  const { hasPermission } = useSession();
   const pathname = usePathname();
 
-  const userItems: NavItem[] = [
+  const navItemsAll: NavItem[] = [
     { href: "/dashboard", label: "Resumen", icon: GridIcon },
-    { href: "/tasks", label: "Tareas", icon: CheckCircleIcon },
-    { href: "/categories", label: "Categorías", icon: FolderIcon },
-    { href: "/tags", label: "Etiquetas", icon: TagIcon },
-    { href: "/calendar", label: "Calendario", icon: CalendarIcon },
+    { href: "/tasks", label: "Tareas", icon: CheckCircleIcon, permission: ["tasks", "view"] },
+    { href: "/categories", label: "Categorías", icon: FolderIcon, permission: ["categories", "view"] },
+    { href: "/tags", label: "Etiquetas", icon: TagIcon, permission: ["tags", "view"] },
+    { href: "/calendar", label: "Calendario", icon: CalendarIcon, permission: ["tasks", "view"] },
+    { href: "/admin/users", label: "Usuarios", icon: UsersIcon, permission: ["users", "view"] },
+    { href: "/admin/roles", label: "Roles", icon: ShieldIcon, permission: ["roles", "view"] },
+    { href: "/admin/comments", label: "Comentarios", icon: ChatIcon, permission: ["comments", "view"] },
   ];
 
-  const adminItems: NavItem[] = [
-    { href: "/admin", label: "Panel admin", icon: GaugeIcon },
-    { href: "/admin/users", label: "Usuarios", icon: UsersIcon },
-    { href: "/admin/comments", label: "Comentarios", icon: ChatIcon },
-    { href: "/admin/roles", label: "Roles", icon: ShieldIcon },
-  ];
+  const navItems = navItemsAll.filter(
+    (item) => !item.permission || hasPermission(...item.permission),
+  );
 
   const renderItem = (item: NavItem) => {
-    const active =
-      item.href === "/admin"
-        ? pathname === "/admin"
-        : pathname === item.href || pathname.startsWith(`${item.href}/`);
+    const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
     const Icon = item.icon;
     return (
       <SidebarMenuItem key={item.href}>
@@ -57,23 +59,12 @@ export function UiAppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Admin is purely administrative: it does not use the personal
-            (Panel) modules — only the Administración group. */}
-        {isAdmin ? (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administración</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>{adminItems.map(renderItem)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          <SidebarGroup>
-            <SidebarGroupLabel>Panel</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>{userItems.map(renderItem)}</SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup>
+          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{navItems.map(renderItem)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
@@ -118,18 +109,6 @@ function FolderIcon({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
-      />
-    </svg>
-  );
-}
-
-function GaugeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 12a9 9 0 1 1 18 0M12 12l4-2.5M8.25 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
       />
     </svg>
   );

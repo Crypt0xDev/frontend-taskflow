@@ -30,7 +30,7 @@ export function UiSiteNavbar() {
         </Link>
 
         <NavigationMenu className="hidden sm:flex">
-          <NavigationMenuList>
+          <NavigationMenuList className="gap-1">
             {LINKS.map(({ href, label }) => {
               const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
               return (

@@ -13,12 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
+import { useSession } from "@/lib/session";
 
 import { useCommentModeration } from "../hooks/useCommentModeration";
 import type { Comment } from "../type/typeCommentBase";
 
 export default function UiCommentModeration() {
   const { comments, total, loading, query, setQuery, remove } = useCommentModeration();
+  const { hasPermission } = useSession();
+  const canDelete = hasPermission("comments", "delete");
   const [deleting, setDeleting] = useState<Comment | null>(null);
   const [viewing, setViewing] = useState<Comment | null>(null);
   const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Comment>();
@@ -33,7 +36,7 @@ export default function UiCommentModeration() {
       <UiActionToolbar
         hasSelection={hasSelection}
         onView={() => selected && setViewing(selected)}
-        onDelete={() => selected && setDeleting(selected)}
+        onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
       />
 
       <Input

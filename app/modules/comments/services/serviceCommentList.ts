@@ -1,7 +1,7 @@
-import { apiFetch } from "@/lib/api";
+import { apiFetchList } from "@/lib/api";
 
 import type { Comment } from "../type/typeCommentBase";
 
 export function serviceCommentList() {
-  return apiFetch<Comment[]>("/comments");
+  return apiFetchList<Comment>("/comments");
 }

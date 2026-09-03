@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { serviceCategoryList } from "../services/serviceCategoryList";
-import type { Category } from "../type/typeCategoryBase";
+import { serviceCategoryList } from '../services/serviceCategoryList';
+import type { Category } from '../type/typeCategoryBase';
 
 export function useCategoryOptions() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -11,8 +11,7 @@ export function useCategoryOptions() {
   useEffect(() => {
     serviceCategoryList()
       .then(setCategories)
-      .catch(() => {
-      });
+      .catch(() => {});
   }, []);
 
   return categories;

@@ -3,34 +3,26 @@
 import { useMemo, useState } from "react";
 import { Trash } from "lucide-react";
 
+//
 import { UiActionToolbar } from "@/components/UiActionToolbar";
 import { useRowSelection } from "@/hooks/useRowSelection";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useCategoryOptions } from "@/app/modules/categories/hooks";
 import { PAGE_SIZE } from "@/config/constants";
+import { useSession } from "@/lib/session";
 
+// Tipado
 import { useTaskCreate, useTaskDelete, useTaskList, useTaskUpdate } from "./hooks";
 import type { Task, TaskPriority, TaskStatus } from "./type/typeTaskBase";
 import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "./type/typeTaskBase";
 import type { TaskInput } from "./type/typeTaskInput";
+
+// Componentes
 import { UiTaskForm } from "./ui/UiTaskForm";
 import { UiTaskList } from "./ui/UiTaskList";
 import { UiTaskTrash } from "./ui/UiTaskTrash";
@@ -42,6 +34,10 @@ export default function UiTaskPage() {
   const { update } = useTaskUpdate();
   const { remove } = useTaskDelete();
   const categories = useCategoryOptions();
+  const { hasPermission } = useSession();
+  const canCreate = hasPermission("tasks", "create");
+  const canUpdate = hasPermission("tasks", "update");
+  const canDelete = hasPermission("tasks", "delete");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
@@ -113,14 +109,16 @@ export default function UiTaskPage() {
       <UiActionToolbar
         hasSelection={hasSelection}
         onView={() => selected && setViewing(selected)}
-        onEdit={() => selected && openEdit(selected)}
-        onDelete={() => selected && setDeleting(selected)}
-        onCreate={openCreate}
+        onEdit={canUpdate ? () => selected && openEdit(selected) : undefined}
+        onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
+        onCreate={canCreate ? openCreate : undefined}
         end={
-          <Button variant="outline" onClick={() => setTrashOpen(true)}>
-            <Trash className="size-4" />
-            Papelera
-          </Button>
+          canDelete ? (
+            <Button variant="outline" onClick={() => setTrashOpen(true)}>
+              <Trash className="size-4" />
+              Papelera
+            </Button>
+          ) : undefined
         }
       />
 

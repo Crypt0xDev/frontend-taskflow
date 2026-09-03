@@ -29,6 +29,7 @@ type Props<T extends { id: number }> = {
   title?: string;
   description?: string;
   emptyLabel?: string;
+  itemLabel?: { one: string; many: string };
   renderItem: (item: T) => React.ReactNode;
   trash: TrashActions<T>;
 };
@@ -40,6 +41,7 @@ export function UiTrashSheet<T extends { id: number }>({
   title = "Papelera",
   description = "Restaura un elemento o elimínalo definitivamente.",
   emptyLabel = "La papelera está vacía.",
+  itemLabel = { one: "elemento", many: "elementos" },
   renderItem,
   trash,
 }: Props<T>) {
@@ -116,7 +118,7 @@ export function UiTrashSheet<T extends { id: number }>({
         open={confirmEmpty}
         onOpenChange={setConfirmEmpty}
         title="¿Vaciar la papelera?"
-        description={`Se eliminarán definitivamente ${items.length} ${items.length === 1 ? "elemento" : "elementos"
+        description={`Se eliminarán definitivamente ${items.length} ${items.length === 1 ? itemLabel.one : itemLabel.many
           }. Esta acción no se puede deshacer.`}
         confirmText="Vaciar papelera"
         destructive

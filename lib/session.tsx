@@ -4,13 +4,17 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 
 import { apiFetch, clearToken, getToken, setToken } from "@/lib/api";
 
-export type Role = "admin" | "user";
+export type RoleRef = {
+  id: number;
+  name: string;
+};
 
 export type User = {
   id: number;
   username: string;
   email?: string | null;
-  role: Role;
+  role: RoleRef;
+  permissions: string[];
   birth_date?: string | null;
   age?: number | null;
   avatar?: string | null;
@@ -22,6 +26,7 @@ type SessionValue = {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  hasPermission: (module: string, action: string) => boolean;
   login: (token: string, user: User) => void;
   updateUser: (patch: Partial<User>) => void;
   logout: () => Promise<void>;
@@ -73,9 +78,26 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const hasPermission = useCallback(
+    (module: string, action: string) => {
+      if (!user) return false;
+      if (user.role?.name === "admin") return true;
+      return user.permissions?.includes(`${module}.${action}`) ?? false;
+    },
+    [user],
+  );
+
   return (
     <SessionContext.Provider
-      value={{ user, loading, isAdmin: user?.role === "admin", login, updateUser, logout }}
+      value={{
+        user,
+        loading,
+        isAdmin: user?.role?.name === "admin",
+        hasPermission,
+        login,
+        updateUser,
+        logout,
+      }}
     >
       {children}
     </SessionContext.Provider>

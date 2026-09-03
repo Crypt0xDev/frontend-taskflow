@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api";
+import { deferMicrotask } from "@/lib/utils";
 
 import { serviceCommentDelete } from "../services/serviceCommentDelete";
 import { serviceCommentList } from "../services/serviceCommentList";
@@ -28,7 +29,7 @@ export function useCommentModeration() {
   }, []);
 
   useEffect(() => {
-    void Promise.resolve().then(load);
+    deferMicrotask(load);
   }, [load]);
 
   const remove = useCallback(async (id: number) => {

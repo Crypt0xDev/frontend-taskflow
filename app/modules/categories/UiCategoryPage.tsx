@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
+import { useSession } from "@/lib/session";
 
 import { useCategoryCreate, useCategoryDelete, useCategoryList, useCategoryUpdate, } from "./hooks";
 import type { CategoryValues } from "./schema";
@@ -33,6 +34,10 @@ export default function UiCategoryPage() {
   const { create } = useCategoryCreate();
   const { update } = useCategoryUpdate();
   const { remove } = useCategoryDelete();
+  const { hasPermission } = useSession();
+  const canCreate = hasPermission("categories", "create");
+  const canUpdate = hasPermission("categories", "update");
+  const canDelete = hasPermission("categories", "delete");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
@@ -47,6 +52,12 @@ export default function UiCategoryPage() {
     serviceCategoryTrashed,
     serviceCategoryRestore,
     serviceCategoryForceDelete,
+    {
+      restored: "Categoría restaurada.",
+      deleted: "Categoría eliminada definitivamente.",
+      restoredAll: "Se restauraron todas las categorías.",
+      emptied: "Papelera de categorías vaciada.",
+    },
   );
 
   const filtered = useMemo(() => {
@@ -83,14 +94,16 @@ export default function UiCategoryPage() {
       <UiActionToolbar
         hasSelection={hasSelection}
         onView={() => selected && setViewing(selected)}
-        onEdit={() => selected && openEdit(selected)}
-        onDelete={() => selected && setDeleting(selected)}
-        onCreate={openCreate}
+        onEdit={canUpdate ? () => selected && openEdit(selected) : undefined}
+        onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
+        onCreate={canCreate ? openCreate : undefined}
         end={
-          <Button variant="outline" onClick={() => setTrashOpen(true)}>
-            <Trash className="size-4" />
-            Papelera
-          </Button>
+          canDelete ? (
+            <Button variant="outline" onClick={() => setTrashOpen(true)}>
+              <Trash className="size-4" />
+              Papelera
+            </Button>
+          ) : undefined
         }
       />
 
@@ -199,6 +212,7 @@ export default function UiCategoryPage() {
         onChanged={reload}
         title="Papelera de categorías"
         emptyLabel="No hay categorías en la papelera."
+        itemLabel={{ one: "categoría", many: "categorías" }}
         trash={trash}
         renderItem={(c) => <p className="truncate font-medium">{c.name}</p>}
       />
