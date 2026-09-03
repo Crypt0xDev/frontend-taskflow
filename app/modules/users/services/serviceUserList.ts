@@ -1,6 +1,7 @@
-import { apiFetch } from "@/lib/api";
-import type { User } from "@/lib/session";
+import { apiFetchList } from "@/lib/api";
+
+import type { User } from "../type/typeUserBase";
 
 export function serviceUserList() {
-  return apiFetch<User[]>("/admin/users");
+  return apiFetchList<User>("/admin/users");
 }

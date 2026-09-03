@@ -1,11 +1,8 @@
 import { apiFetch } from "@/lib/api";
-import type { Role, User } from "@/lib/session";
 
-export function serviceUserCreate(data: {
-  email: string;
-  user_name?: string | null;
-  password: string;
-  role: Role;
-}) {
+import type { User } from "../type/typeUserBase";
+import type { UserCreateInput } from "../type/typeUserCreate";
+
+export function serviceUserCreate(data: UserCreateInput) {
   return apiFetch<User>("/admin/users", { method: "POST", body: data });
 }

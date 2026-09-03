@@ -1,9 +1,8 @@
 import { apiFetch } from "@/lib/api";
 
-export function serviceUserResetPassword(
-  id: number,
-  data: { password: string; password_confirmation: string },
-) {
+import type { UserResetPasswordInput } from "../type/typeUserResetPassword";
+
+export function serviceUserResetPassword(id: number, data: UserResetPasswordInput) {
   return apiFetch<{ message: string }>(`/admin/users/${id}/password`, {
     method: "PUT",
     body: data,

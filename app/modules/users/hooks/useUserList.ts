@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api";
-import type { Role, User } from "@/lib/session";
+import { deferMicrotask } from "@/lib/utils";
 
 import { serviceUserDelete } from "../services/serviceUserDelete";
 import { serviceUserList } from "../services/serviceUserList";
 import { serviceUserUpdate } from "../services/serviceUserUpdate";
+import type { User } from "../type/typeUserBase";
 
 function errorMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : "Ocurrió un error inesperado.";
@@ -30,12 +31,12 @@ export function useUserList() {
   }, []);
 
   useEffect(() => {
-    void Promise.resolve().then(load);
+    deferMicrotask(load);
   }, [load]);
 
-  const changeRole = useCallback(async (id: number, role: Role) => {
+  const changeRole = useCallback(async (id: number, role_id: number) => {
     try {
-      const updated = await serviceUserUpdate(id, { role });
+      const updated = await serviceUserUpdate(id, { role_id });
       setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
       toast.success("Rol actualizado.");
     } catch (error) {
