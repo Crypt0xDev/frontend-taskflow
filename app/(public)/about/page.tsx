@@ -28,6 +28,21 @@ const VALUES = [
   },
 ];
 
+const STEPS = [
+  {
+    title: "Anota",
+    desc: "Crea una tarea en segundos, sin campos obligatorios de más.",
+  },
+  {
+    title: "Clasifica",
+    desc: "Ordénala en categorías y marca su prioridad real.",
+  },
+  {
+    title: "Completa",
+    desc: "Táchala y sigue con lo siguiente. Simple.",
+  },
+];
+
 export default function AboutPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
@@ -55,6 +70,19 @@ export default function AboutPage() {
             <p className="mt-2 text-sm text-ink-500">{v.desc}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-16 rounded-4xl border border-ink-100 bg-surface p-8 shadow-soft sm:p-10">
+        <h2 className="font-display text-2xl font-bold">Cómo funciona</h2>
+        <div className="mt-8 grid gap-8 sm:grid-cols-3">
+          {STEPS.map((s, i) => (
+            <div key={s.title} className="relative">
+              <span className="font-display text-4xl font-extrabold text-brand-100">0{i + 1}</span>
+              <h3 className="mt-2 font-display text-lg font-bold">{s.title}</h3>
+              <p className="mt-1 text-sm text-ink-500">{s.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-14 flex flex-wrap items-center gap-3">

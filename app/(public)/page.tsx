@@ -97,9 +97,26 @@ export default function Home() {
         </div>
       </AuroraBackground>
 
+      {/* Stats */}
+      <section className="mx-auto max-w-6xl px-6 pb-4">
+        <div className="grid grid-cols-2 gap-5 border-y border-ink-100 py-8 sm:grid-cols-4">
+          {STATS.map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="font-display text-3xl font-extrabold text-brand-600 sm:text-4xl">{s.value}</p>
+              <p className="mt-1 text-sm text-ink-500">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Features */}
-      <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="grid gap-5 sm:grid-cols-3">
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="mx-auto max-w-xl text-center">
+          <h2 className="font-display text-3xl font-bold text-balance sm:text-4xl">Todo lo que necesitas</h2>
+          <p className="mt-3 text-ink-500">Sin curva de aprendizaje, sin ruido: solo lo esencial para avanzar.</p>
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {FEATURES.map((f) => (
             <div
               key={f.title}
@@ -115,8 +132,57 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
 
-        <div className="relative mt-16 overflow-hidden rounded-4xl bg-night px-6 py-16 text-center">
+      {/* Testimonials teaser */}
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-display text-3xl font-bold text-balance sm:text-4xl">Lo que dice la comunidad</h2>
+            <p className="mt-3 text-ink-500">Personas reales, organizando su día con TaskFlow.</p>
+          </div>
+          <Link
+            href="/comments"
+            className="hidden shrink-0 whitespace-nowrap text-sm font-semibold text-brand-600 hover:underline sm:block"
+          >
+            Ver todos los comentarios →
+          </Link>
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-3">
+          {TESTIMONIALS.map((t) => (
+            <div key={t.name} className="rounded-3xl border border-ink-100 bg-surface p-6 shadow-soft">
+              <div className="flex gap-0.5 text-warm-500">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <svg key={i} className="size-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M10 1.5 12.6 7l6 .9-4.3 4.2 1 6-5.3-2.8-5.3 2.8 1-6L1.4 7.9l6-.9Z" />
+                  </svg>
+                ))}
+              </div>
+              <p className="mt-4 text-sm text-ink-600">“{t.quote}”</p>
+              <div className="mt-5 flex items-center gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-100 font-display font-bold text-brand-700">
+                  {t.name.charAt(0)}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{t.name}</p>
+                  <p className="truncate text-xs text-ink-400">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Link
+          href="/comments"
+          className="mt-8 block text-center text-sm font-semibold text-brand-600 hover:underline sm:hidden"
+        >
+          Ver todos los comentarios →
+        </Link>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="relative overflow-hidden rounded-4xl bg-night px-6 py-16 text-center">
           <div className="absolute -top-16 -right-10 size-72 rounded-full bg-brand-500/30 blur-3xl" />
           <h2 className="relative font-display text-3xl font-bold text-balance text-white sm:text-4xl">
             Empieza a avanzar hoy
@@ -135,6 +201,31 @@ export default function Home() {
     </main>
   );
 }
+
+const STATS = [
+  { value: "10k+", label: "Tareas completadas" },
+  { value: "2.5k", label: "Personas activas" },
+  { value: "4.8/5", label: "Valoración media" },
+  { value: "< 1 min", label: "Para empezar" },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Marcela Ruiz",
+    role: "Diseñadora freelance",
+    quote: "Dejé de perder tareas en notas sueltas. Ahora todo vive en un solo lugar y lo reviso en segundos.",
+  },
+  {
+    name: "Diego Fernández",
+    role: "Product Manager",
+    quote: "La priorización es justo lo que necesitaba: ver lo urgente sin ahogarme en listas interminables.",
+  },
+  {
+    name: "Camila Torres",
+    role: "Estudiante de posgrado",
+    quote: "Simple de usar desde el primer día. Lo recomiendo a todo el que me dice que anda desorganizado.",
+  },
+];
 
 const FEATURES = [
   {

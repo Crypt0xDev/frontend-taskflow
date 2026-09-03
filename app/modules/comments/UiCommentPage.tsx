@@ -21,7 +21,14 @@ export default function UiCommentPage({ initial }: { initial: Comment[] }) {
       <h1 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
         Comentarios
       </h1>
-      <p className="mt-4 text-lg text-ink-500">Lee lo que opina la gente y suma tu voz.</p>
+      <p className="mt-4 text-lg text-ink-500">
+        Lee lo que opina la gente y suma tu voz.{" "}
+        {comments.length > 0 && (
+          <span className="font-semibold text-ink-700">
+            {comments.length} {comments.length === 1 ? "comentario" : "comentarios"}
+          </span>
+        )}
+      </p>
 
       <div className="mt-8 space-y-6">
         {user ? (

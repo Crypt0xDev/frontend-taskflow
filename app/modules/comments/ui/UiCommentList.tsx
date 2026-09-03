@@ -12,22 +12,33 @@ type Props = {
   onRemove: (id: number) => void;
 };
 
+const AVATAR_TONES = [
+  "bg-brand-100 text-brand-700",
+  "bg-warm-100 text-warm-600",
+  "bg-ink-100 text-ink-700",
+];
+
+function toneFor(id: number) {
+  return AVATAR_TONES[id % AVATAR_TONES.length];
+}
+
 export function UiCommentList({ comments, isAdmin, currentUserId, onRemove }: Props) {
   if (comments.length === 0) {
     return (
-      <p className="py-8 text-center text-ink-400">
-        Todavía no hay comentarios. ¡Sé el primero!
-      </p>
+      <div className="rounded-3xl border border-dashed border-ink-200 py-14 text-center">
+        <p className="font-display text-lg font-bold text-ink-600">Todavía no hay comentarios</p>
+        <p className="mt-1 text-sm text-ink-400">¡Sé la primera persona en compartir tu opinión!</p>
+      </div>
     );
   }
 
   return (
     <ul className="space-y-3">
       {comments.map((c) => (
-        <li key={c.id} className="rounded-3xl border border-ink-100 bg-surface p-5 shadow-soft">
+        <li key={c.id} className="rounded-3xl border border-ink-100 bg-surface p-5 shadow-soft transition hover:-translate-y-0.5">
           <div className="flex items-center gap-3">
             <Avatar className="size-9">
-              <AvatarFallback className="bg-brand-100 font-display font-bold text-brand-700">
+              <AvatarFallback className={`font-display font-bold ${toneFor(c.author?.id ?? 0)}`}>
                 {(c.author?.username ?? "?").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>

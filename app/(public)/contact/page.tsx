@@ -8,6 +8,17 @@ export const metadata: Metadata = {
   description: "¿Tienes dudas o sugerencias sobre TaskFlow? Escríbenos.",
 };
 
+const FAQS = [
+  {
+    q: "¿TaskFlow tiene un plan gratuito?",
+    a: "Sí, crear tu cuenta y usar las funciones esenciales es gratis desde el primer día.",
+  },
+  {
+    q: "¿Puedo eliminar mis datos?",
+    a: "Claro, desde tu perfil puedes borrar tareas y categorías cuando quieras.",
+  },
+];
+
 export default function ContactPage() {
   return (
     <main className="mx-auto grid max-w-5xl items-start gap-10 px-6 py-16 sm:py-24 lg:grid-cols-2">
@@ -32,7 +43,24 @@ export default function ContactPage() {
             </span>
             hola@taskflow.test
           </li>
+          <li className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-xl bg-warm-100 text-warm-600">
+              <svg className="size-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            </span>
+            Respondemos en menos de 24 horas
+          </li>
         </ul>
+
+        <div className="mt-10 space-y-4">
+          {FAQS.map((f) => (
+            <div key={f.q} className="rounded-2xl border border-ink-100 bg-surface p-4">
+              <p className="font-semibold text-ink-800">{f.q}</p>
+              <p className="mt-1 text-sm text-ink-500">{f.a}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Card>
