@@ -4,10 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api";
+import { deferMicrotask } from "@/lib/utils";
 
-import { serviceTagDelete, serviceTagList } from "../services/serviceTag";
+// Services
+import { serviceTagDelete } from "../services/serviceTagDelete";
+import { serviceTagList } from "../services/serviceTagList";
+
+// Types
 import type { Tag } from "../type/typeTagBase";
 
+//
 export function useTagList() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +30,7 @@ export function useTagList() {
   }, []);
 
   useEffect(() => {
-    load();
+    deferMicrotask(load);
   }, [load]);
 
   const remove = useCallback(async (id: number) => {

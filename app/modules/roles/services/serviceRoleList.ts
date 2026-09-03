@@ -1,7 +1,7 @@
-import { apiFetch } from "@/lib/api";
+import { apiFetchList } from "@/lib/api";
 
 import type { Role } from "../type/typeRoleBase";
 
 export function serviceRoleList() {
-  return apiFetch<Role[]>("/admin/roles");
+  return apiFetchList<Role>("/admin/roles");
 }

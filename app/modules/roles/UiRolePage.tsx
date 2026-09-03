@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useRowSelection } from "@/hooks/useRowSelection";
+import { useSession } from "@/lib/session";
 
 import { usePermissionList } from "./hooks/usePermissionList";
 import { useRoleList } from "./hooks/useRoleList";
@@ -29,12 +30,17 @@ function byModule(permissions: Permission[]): Record<string, Permission[]> {
 export default function UiRolePage() {
   const { roles, loading, reload, remove } = useRoleList();
   const { permissions } = usePermissionList();
+  const { hasPermission } = useSession();
   const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Role>();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Role | null>(null);
   const [viewing, setViewing] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState<Role | null>(null);
+
+  const canCreate = hasPermission("roles", "create");
+  const canUpdate = hasPermission("roles", "update");
+  const canDelete = hasPermission("roles", "delete");
 
   const selectedIsSystem = selected ? SYSTEM_ROLES.includes(selected.name) : false;
 
@@ -58,9 +64,9 @@ export default function UiRolePage() {
       <UiActionToolbar
         hasSelection={hasSelection}
         onView={() => selected && setViewing(selected)}
-        onEdit={() => selected && openEdit(selected)}
-        onDelete={() => selected && setDeleting(selected)}
-        onCreate={openCreate}
+        onEdit={canUpdate ? () => selected && openEdit(selected) : undefined}
+        onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
+        onCreate={canCreate ? openCreate : undefined}
         deleteDisabled={selectedIsSystem}
       />
 

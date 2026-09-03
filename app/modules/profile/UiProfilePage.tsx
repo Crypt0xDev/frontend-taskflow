@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, deferMicrotask } from "@/lib/utils";
 import { AVATARS } from "@/lib/profilePrefs";
 import { ApiError } from "@/lib/api";
 import { useSession } from "@/lib/session";
@@ -29,8 +29,10 @@ export default function UiProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    setBirthDate(user.birth_date ?? "");
-    setAvatar(user.avatar ?? null);
+    deferMicrotask(() => {
+      setBirthDate(user.birth_date ?? "");
+      setAvatar(user.avatar ?? null);
+    });
   }, [user]);
 
   async function savePrefs() {
@@ -96,7 +98,7 @@ export default function UiProfilePage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Rol</p>
                   <p className="text-sm font-medium">
-                    {user?.role === "admin" ? "Administrador" : "Usuario"}
+                    {user?.role.name ?? "—"}
                   </p>
                 </div>
                 <div className="flex justify-end">

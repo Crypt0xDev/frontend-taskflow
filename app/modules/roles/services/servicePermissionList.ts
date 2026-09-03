@@ -1,7 +1,7 @@
-import { apiFetch } from "@/lib/api";
+import { apiFetchList } from "@/lib/api";
 
 import type { Permission } from "../type/typeRoleBase";
 
 export function servicePermissionList() {
-  return apiFetch<Permission[]>("/admin/permissions");
+  return apiFetchList<Permission>("/admin/permissions");
 }

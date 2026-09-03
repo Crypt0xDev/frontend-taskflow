@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api";
+import { deferMicrotask } from "@/lib/utils";
 
 import { serviceRoleList } from "../services/serviceRoleList";
 import { serviceRoleDelete } from "../services/serviceRoleDelete";
@@ -25,7 +26,7 @@ export function useRoleList() {
   }, []);
 
   useEffect(() => {
-    load();
+    deferMicrotask(load);
   }, [load]);
 
   const remove = useCallback(async (id: number) => {

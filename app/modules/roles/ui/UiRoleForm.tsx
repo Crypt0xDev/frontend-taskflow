@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError } from "@/lib/api";
+import { apiFieldErrors } from "@/lib/form";
 import { cn } from "@/lib/utils";
 
 import { serviceRoleCreate } from "../services/serviceRoleCreate";
 import { serviceRoleUpdate } from "../services/serviceRoleUpdate";
+import { roleSchema, type RoleValues } from "../schema";
 import type { Permission, Role } from "../type/typeRoleBase";
 
 type Props = {
@@ -25,19 +29,19 @@ type Props = {
 };
 
 export function UiRoleForm({ open, onOpenChange, role, permissions, onSaved }: Props) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [error, setError] = useState<string | undefined>();
-  const [saving, setSaving] = useState(false);
+  const form = useForm<RoleValues>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: { name: "", description: null, permission_ids: [] },
+  });
 
   useEffect(() => {
     if (!open) return;
-    setError(undefined);
-    setName(role?.name ?? "");
-    setDescription(role?.description ?? "");
-    setSelected(new Set(role?.permissions.map((p) => p.id) ?? []));
-  }, [open, role]);
+    form.reset({
+      name: role?.name ?? "",
+      description: role?.description ?? null,
+      permission_ids: role?.permissions.map((p) => p.id) ?? [],
+    });
+  }, [open, role, form]);
 
   const grouped = useMemo(() => {
     return permissions.reduce<Record<string, Permission[]>>((acc, p) => {
@@ -46,40 +50,28 @@ export function UiRoleForm({ open, onOpenChange, role, permissions, onSaved }: P
     }, {});
   }, [permissions]);
 
-  function togglePerm(id: number) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  async function handleSubmit(values: RoleValues) {
+    try {
+      if (role) await serviceRoleUpdate(role.id, values);
+      else await serviceRoleCreate(values);
+      toast.success(role ? "Rol actualizado." : "Rol creado.");
+      onOpenChange(false);
+      onSaved();
+    } catch (error) {
+      if (error instanceof ApiError && error.errors) {
+        const fields = apiFieldErrors(error.errors);
+        for (const [name, message] of Object.entries(fields)) {
+          if (name in form.getValues()) {
+            form.setError(name as keyof RoleValues, { message });
+          }
+        }
+      } else {
+        toast.error(error instanceof ApiError ? error.message : "No se pudo guardar el rol.");
+      }
+    }
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(undefined);
-    if (name.trim().length < 1) {
-      setError("El nombre es obligatorio.");
-      return;
-    }
-    const payload = {
-      name: name.trim(),
-      description: description.trim() || null,
-      permission_ids: Array.from(selected),
-    };
-    setSaving(true);
-    try {
-      if (role) await serviceRoleUpdate(role.id, payload);
-      else await serviceRoleCreate(payload);
-      toast.success(role ? "Rol actualizado." : "Rol creado.");
-      onSaved();
-      onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo guardar el rol.");
-    } finally {
-      setSaving(false);
-    }
-  }
+  const submitting = form.formState.isSubmitting;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -88,68 +80,108 @@ export function UiRoleForm({ open, onOpenChange, role, permissions, onSaved }: P
           <SheetTitle>{role ? "Editar rol" : "Nuevo rol"}</SheetTitle>
           <SheetDescription>Define el nombre y los permisos del rol.</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit} noValidate className="flex flex-1 flex-col gap-4 px-4">
-          <div className="space-y-2">
-            <Label htmlFor="role-name">Nombre</Label>
-            <Input id="role-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role-desc">Descripción</Label>
-            <Textarea
-              id="role-desc"
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            noValidate
+            className="flex flex-1 flex-col gap-4 px-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre</FormLabel>
+                  <FormControl>
+                    <Input autoFocus {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-3">
-            <Label>Permisos</Label>
-            {Object.entries(grouped).map(([module, perms]) => (
-              <div key={module} className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground capitalize">{module}</p>
-                <div className="space-y-1">
-                  {perms.map((p) => {
-                    const on = selected.has(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => togglePerm(p.id)}
-                        className={cn(
-                          "flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm transition-colors",
-                          on ? "border-brand-500 bg-brand-500/10" : "border-input hover:bg-muted",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "grid size-4 shrink-0 place-items-center rounded border",
-                            on ? "border-brand-500 bg-brand-500 text-white" : "border-input",
-                          )}
-                        >
-                          {on && <Check className="size-3" />}
-                        </span>
-                        <span className="font-mono text-xs">{p.name}</span>
-                        <span className="truncate text-muted-foreground">{p.description}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={2}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+            <FormField
+              control={form.control}
+              name="permission_ids"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Permisos</FormLabel>
+                  {Object.entries(grouped).map(([module, perms]) => (
+                    <div key={module} className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground capitalize">{module}</p>
+                      <div className="space-y-1">
+                        {perms.map((p) => {
+                          const on = field.value.includes(p.id);
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() =>
+                                field.onChange(
+                                  on
+                                    ? field.value.filter((id) => id !== p.id)
+                                    : [...field.value, p.id],
+                                )
+                              }
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm transition-colors",
+                                on ? "border-brand-500 bg-brand-500/10" : "border-input hover:bg-muted",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "grid size-4 shrink-0 place-items-center rounded border",
+                                  on ? "border-brand-500 bg-brand-500 text-white" : "border-input",
+                                )}
+                              >
+                                {on && <Check className="size-3" />}
+                              </span>
+                              <span className="font-mono text-xs">{p.name}</span>
+                              <span className="truncate text-muted-foreground">{p.description}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <SheetFooter className="flex-row justify-end gap-2 border-t px-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar"}
-            </Button>
-          </SheetFooter>
-        </form>
+            <SheetFooter className="flex-row justify-end gap-2 border-t px-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={submitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Guardando…" : "Guardar"}
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );
