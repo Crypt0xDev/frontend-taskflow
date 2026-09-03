@@ -1,11 +1,14 @@
-import type { Metadata } from "next";
+"use client";
 
-import UiAdminOverview from "@/app/modules/admin/ui/UiAdminOverview";
-
-export const metadata: Metadata = {
-  title: "Panel de administración",
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminOverviewRoute() {
-  return <UiAdminOverview />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard");
+  }, [router]);
+
+  return null;
 }

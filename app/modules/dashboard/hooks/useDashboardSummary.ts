@@ -7,37 +7,47 @@ import { serviceCategoryList } from "@/app/modules/categories/services";
 import { serviceTaskList } from "@/app/modules/tasks/services";
 import type { Task } from "@/app/modules/tasks/type";
 import { ApiError } from "@/lib/api";
+import { useSession } from "@/lib/session";
 
-export type DashboardStats = {
-  pending: number;
-  in_progress: number;
-  completed: number;
-  categories: number;
-  total: number;
-  pct: number;
-};
+import type { DashboardStats } from "../type/typeDashboardStats";
 
 export function useDashboardSummary() {
+  const { hasPermission } = useSession();
+  const canViewTasks = hasPermission("tasks", "view");
+  const canViewCategories = hasPermission("categories", "view");
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recent, setRecent] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
+    if (!canViewTasks) return;
+
     let active = true;
 
     (async () => {
       try {
-        const [tasks, categories] = await Promise.all([serviceTaskList(), serviceCategoryList()]);
+        const [tasks, categories] = await Promise.all([
+          serviceTaskList(),
+          canViewCategories ? serviceCategoryList() : Promise.resolve([]),
+        ]);
         if (!active) return;
 
         const by = (status: Task["status"]) => tasks.filter((t) => t.status === status).length;
         const completed = by("completed");
         const total = tasks.length;
 
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const pending = tasks.filter((t) => t.status !== "completed" && t.due_date);
+        const overdue = pending.filter((t) => t.due_date!.slice(0, 10) < todayKey).length;
+        const dueToday = pending.filter((t) => t.due_date!.slice(0, 10) === todayKey).length;
+
         setStats({
           pending: by("pending"),
           in_progress: by("in_progress"),
           completed,
+          overdue,
+          dueToday,
           categories: categories.length,
           total,
           pct: total ? Math.round((completed / total) * 100) : 0,
@@ -48,14 +58,14 @@ export function useDashboardSummary() {
           toast.error(error instanceof ApiError ? error.message : "No se pudo cargar el panel.");
         }
       } finally {
-        if (active) setLoading(false);
+        if (active) setFetching(false);
       }
     })();
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [canViewTasks, canViewCategories]);
 
-  return { stats, recent, loading };
+  return { stats, recent, loading: canViewTasks && fetching, canViewTasks, canViewCategories };
 }
