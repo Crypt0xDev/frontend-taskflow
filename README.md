@@ -12,86 +12,79 @@ Gestión de **tareas, categorías, etiquetas y comentarios** con panel de admini
 
 </div>
 
+Solo frontend. El [backend](https://github.com/Crypt0xDev/backend-taskflow.git) (Laravel 10) vive en otro repositorio y corre aparte.
 
-## 🚀 Quick start
-
-**Requisitos previos:**
-- Node.js y npm instalados
-
-**Pasos:**
-
-1. **Configurar variables de entorno**
-   ```bash
-   echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
-   ```
-
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-
-3. **Ejecutar en desarrollo**
-   ```bash
-   npm run dev
-   ```
-   Luego accede a `http://localhost:3000`
-
-> Solo **frontend**. El [Backend](https://github.com/Crypt0xDev/backend-taskflow.git). Laravel (`/api/v1`) vive en otro repositorio.
-
-## 🛠️ Tecnologías
-
-- **Next.js 16** - Framework React con SSR/SSG
-- **React 19** - Librería UI
-- **TypeScript 5** - Tipado estático
-- **Tailwind CSS 4** - Estilos utilitarios
-- **shadcn/ui** - Componentes accesibles y reutilizables
-- **React Hook Form** - Manejo de formularios
-- **Zod** - Validación de esquemas
-- **Axios** - Cliente HTTP
-- **Sonner** - Notificaciones toast
-
-## ✨ Features
-
-| Módulo | Funciones |
-|---|---|
-| 📋 **Tareas** | CRUD · prioridad · estado · categoría · etiquetas · vencimiento · papelera |
-| 🗂️ **Categorías / Etiquetas** | CRUD · color · descripción · buscador + filtros · papelera |
-| 📅 **Calendario** | tareas por fecha de vencimiento (vista mensual) |
-| 👤 **Perfil** | nombre · correo · contraseña · fecha de nacimiento · avatar |
-| 🛡️ **Admin** | usuarios · moderación de comentarios · roles y permisos (RBAC) |
-
-**UX/UI:** tema dark premium · responsive (móvil→desktop) · skeletons · toasts · animaciones · modo claro/oscuro.
-
-## 🔐 Auth
-
-Login por **email + contraseña** (token Sanctum). Roles **`admin`** / **`user`**. Cuentas creadas por admin fuerzan cambio de contraseña al primer acceso.
-
-## 🧱 Estructura
-
-```
-app/(app)/          área privada (sidebar + guard)
-app/(public)/       landing, about, contact
-app/modules/<x>/    ui · hooks · services · type · schema
-components/         UiXxx.tsx (+ ui/ = shadcn)
-hooks/ lib/ config/ utilidades globales
-```
-
-**Convención:** `UiXxx.tsx` · `useXxx.ts` · `serviceXxx.ts` · `typeXxx.ts`
-
-**Compartidos:** `UiActionToolbar` · `UiSelectableRow`+`useRowSelection` · `UiViewSheet` · `UiTrashSheet`+`useTrash` · `UiConfirmDialog`
-
-## 📦 Scripts
+## Quick start
 
 ```bash
-npm run dev      # desarrollo
-npm run build    # producción
-npm run lint     # eslint
+cp .env.example .env.local
+npm install
+npm run dev
 ```
 
-## 📚 Contexto académico
+Requiere Node ≥ 20.9 (usa 22, ver `.nvmrc`). El backend debe estar corriendo en `http://localhost:8000` (o el que pongas en `.env.local`).
 
-Proyecto del curso **Programación Web con Laravel** (CTI) — **UNSM**, Facultad de Ingeniería de Sistemas e Informática.
+## Stack
 
-## 📝 Licencia
+| Pieza       | Tecnología                         |
+| ----------- | ---------------------------------- |
+| Framework   | Next.js 16 (App Router, Turbopack) |
+| UI          | React 19 + TypeScript 5            |
+| Componentes | shadcn/ui sobre Radix y base-ui    |
+| Estilos     | Tailwind CSS 4                     |
+| Formularios | React Hook Form + Zod              |
 
-MIT License. See [LICENSE](LICENSE) for details.
+## Módulos
+
+- **Tareas** — CRUD, prioridad, estado, categoría, etiquetas, vencimiento, papelera.
+- **Categorías / Etiquetas** — CRUD, color, descripción, buscador, filtros, papelera.
+- **Calendario** — tareas por fecha de vencimiento, vista mensual.
+- **Comentarios** — muro público + moderación desde el panel admin.
+- **Perfil** — nombre, correo, contraseña, fecha de nacimiento, avatar.
+- **Admin** — usuarios, moderación de comentarios, roles y permisos (RBAC).
+
+Tema claro/oscuro, responsive, skeletons, animaciones sutiles.
+
+## Arquitectura
+
+```
+app/
+├── (app)/…/page.tsx     rutas privadas — sidebar + guard de sesión
+├── (public)/…/page.tsx  landing, about, contact, muro de comentarios
+├── login/, register/    auth a nivel de ruta, no vive dentro de modules/
+└── modules/<entidad>/
+    ├── Ui<Entidad>Page.tsx   tabla + toolbar + filtros + sheets
+    ├── schema.ts             validación zod, cuando aplica
+    ├── hooks/                use<Entidad><Acción>.ts (+ index.ts)
+    ├── services/             service<Entidad><Acción>.ts, llama a lib/api.ts (+ index.ts)
+    ├── type/                 type<Entidad><Variante>.ts (+ index.ts)
+    └── ui/                   Ui<Entidad><Acción>Form.tsx, View.tsx, etc.
+
+components/   componentes propios (UiXxx.tsx) + ui/ con las primitivas de shadcn
+hooks/        useTrash, useRowSelection, useMobile — compartidos entre módulos
+lib/          api.ts, session.tsx, form.ts, utils.ts
+config/       constants.ts (API_URL, timeouts, claves de storage)
+```
+
+## Scripts
+
+| Comando         | Descripción                  |
+| --------------- | ---------------------------- |
+| `npm run dev`   | Servidor de desarrollo       |
+| `npm run build` | Build de producción          |
+| `npm run start` | Sirve el build de producción |
+| `npm run lint`  | ESLint                       |
+
+## Docker
+
+```bash
+docker compose --env-file .env.docker up --build
+```
+
+## Contexto académico
+
+Proyecto del curso Programación Web con Laravel (CTI) — UNSM, Facultad de Ingeniería de Sistemas e Informática.
+
+## Licencia
+
+MIT — ver [LICENSE](LICENSE).

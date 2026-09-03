@@ -1,14 +1,27 @@
+# Archivos a ignorar en el contexto de Docker
+
+# Control de versiones
 .git
 .gitignore
+
+# Archivos de dependencias
 node_modules
 .next
 npm-debug.log*
+
+# Variables de entorno
 .env
 .env.*
 !.env.example
+
+# Documentation
 README.md
+
+# Archivos de Docker
 Dockerfile
 .dockerignore
 docker-compose.yml
+
+# Archivos de IDE
 .vscode
 .idea
