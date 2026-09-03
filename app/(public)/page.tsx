@@ -1,13 +1,13 @@
 import Link from "next/link";
 
+import { AuroraBackground } from "@/components/ui/aurora-background";
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
+
 export default function Home() {
   return (
     <main>
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute -top-24 -left-24 size-96 rounded-full bg-brand-200/50 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 size-96 rounded-full bg-warm-100/60 blur-3xl" />
-
+      <AuroraBackground className="overflow-hidden" showRadialGradient>
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:py-28 lg:grid-cols-2">
           <div>
             <span className="animate-fade-up inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700">
@@ -33,10 +33,11 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="animate-fade-up mt-6 max-w-md text-lg text-ink-500" style={{ animationDelay: ".16s" }}>
-              Captura tus tareas, ordena tus prioridades y avanza sin fricción. Simple,
-              rápido y con la energía justa para no frenarte.
-            </p>
+            <TextGenerateEffect
+              words="Captura tus tareas, ordena tus prioridades y avanza sin fricción. Simple, rápido y con la energía justa para no frenarte."
+              duration={0.4}
+              className="mt-6 max-w-md text-lg font-normal text-ink-500"
+            />
 
             <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: ".24s" }}>
               <Link
@@ -94,7 +95,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </AuroraBackground>
 
       {/* Features */}
       <section className="mx-auto max-w-6xl px-6 pb-24">
