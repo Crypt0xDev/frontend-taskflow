@@ -1,7 +1,7 @@
-import { apiFetchList } from "@/lib/api";
+import { apiFetchAllPages } from "@/lib/api";
 
 import type { User } from "../type/typeUserBase";
 
 export function serviceUserList() {
-  return apiFetchList<User>("/admin/users");
+  return apiFetchAllPages<User>("/admin/users");
 }

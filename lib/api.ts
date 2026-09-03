@@ -105,3 +105,25 @@ export async function apiFetchList<T>(path: string, options: ApiOptions = {}): P
   const data = await apiFetch<T[] | { data: T[] }>(path, options);
   return Array.isArray(data) ? data : data.data;
 }
+
+type PaginatedResponse<T> = {
+  data: T[];
+  meta?: { current_page: number; last_page: number };
+};
+
+export async function apiFetchAllPages<T>(path: string, options: ApiOptions = {}): Promise<T[]> {
+  const sep = path.includes('?') ? '&' : '?';
+  const first = await apiFetch<T[] | PaginatedResponse<T>>(`${path}${sep}per_page=100`, options);
+
+  if (Array.isArray(first)) return first;
+
+  const results = [...first.data];
+  const lastPage = first.meta?.last_page ?? 1;
+
+  for (let page = 2; page <= lastPage; page++) {
+    const next = await apiFetch<PaginatedResponse<T>>(`${path}${sep}per_page=100&page=${page}`, options);
+    results.push(...next.data);
+  }
+
+  return results;
+}
