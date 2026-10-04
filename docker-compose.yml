@@ -9,9 +9,25 @@ services:
       args:
         # Se hornea en el bundle en build. Apunta al backend accesible
         # desde el navegador del usuario, no desde dentro del contenedor.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_TOKEN_KEY: ${NEXT_PUBLIC_TOKEN_KEY}
+        NEXT_PUBLIC_SESSION_FLAG_COOKIE: ${NEXT_PUBLIC_SESSION_FLAG_COOKIE}
+        NEXT_PUBLIC_REQUEST_TIMEOUT_MS: ${NEXT_PUBLIC_REQUEST_TIMEOUT_MS}
+        NEXT_PUBLIC_PAGE_SIZE: ${NEXT_PUBLIC_PAGE_SIZE}
+        NEXT_PUBLIC_SESSION_MAX_AGE_MINUTES: ${NEXT_PUBLIC_SESSION_MAX_AGE_MINUTES}
+        NEXT_PUBLIC_MAIL_FROM: ${NEXT_PUBLIC_MAIL_FROM}
+        NEXT_PUBLIC_SOCIAL_GITHUB: ${NEXT_PUBLIC_SOCIAL_GITHUB}
+        NEXT_PUBLIC_SOCIAL_LINKEDIN: ${NEXT_PUBLIC_SOCIAL_LINKEDIN}
+        NEXT_PUBLIC_SOCIAL_INSTAGRAM: ${NEXT_PUBLIC_SOCIAL_INSTAGRAM}
+        NEXT_PUBLIC_SOCIAL_X: ${NEXT_PUBLIC_SOCIAL_X}
+        NEXT_PUBLIC_LEGAL_OWNER: ${NEXT_PUBLIC_LEGAL_OWNER}
+        NEXT_PUBLIC_LEGAL_COMPANY: ${NEXT_PUBLIC_LEGAL_COMPANY}
+        NEXT_PUBLIC_LEGAL_CONTACT_EMAIL: ${NEXT_PUBLIC_LEGAL_CONTACT_EMAIL}
+        NEXT_PUBLIC_LEGAL_ANPD_REGISTRATION: ${NEXT_PUBLIC_LEGAL_ANPD_REGISTRATION}
     restart: unless-stopped
+    # Solo en 127.0.0.1: accesible para pruebas locales, pero no desde internet.
+    # En un servidor el tráfico entra por el proxy (Traefik/Dokploy) con HTTPS.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       NODE_ENV: production
