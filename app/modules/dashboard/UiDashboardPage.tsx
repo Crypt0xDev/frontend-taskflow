@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { AlertTriangle, CalendarClock, CheckCircle2, Layers, ListTodo, Loader2 } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, Layers, ListTodo, Loader2, Plus } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,8 @@ function greeting(): string {
 }
 
 export default function DashboardView() {
-  const { user } = useSession();
+  const { user, hasPermission } = useSession();
+  const canCreateTasks = hasPermission("tasks", "create");
   const { stats, recent, loading: tasksLoading, canViewTasks, canViewCategories } = useDashboardSummary();
   const {
     usersOverview,
@@ -56,9 +57,10 @@ export default function DashboardView() {
           </h1>
           <p className="text-sm text-muted-foreground">Tu resumen de TaskFlow.</p>
         </div>
-        {canViewTasks && (
-          <Button render={<Link href="/tasks" />} nativeButton={false}>
-            Ir a mis tareas
+        {canViewTasks && canCreateTasks && (
+          <Button render={<Link href="/tasks?new=1" />} nativeButton={false}>
+            <Plus className="size-4" />
+            Nueva tarea
           </Button>
         )}
       </div>
@@ -79,7 +81,7 @@ export default function DashboardView() {
         ) : (
           <>
             <BentoGrid
-              className="animate-fade-up max-w-none auto-rows-[9rem] grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+              className="animate-fade-up max-w-none auto-rows-auto grid-cols-2 gap-3 md:auto-rows-auto md:grid-cols-3 lg:grid-cols-6"
               style={{ animationDelay: ".05s" }}
             >
               <StatTile
@@ -112,7 +114,6 @@ export default function DashboardView() {
                 label="Completadas"
                 value={stats.completed}
                 hint={`${stats.pct}% del total`}
-                tone="accent"
               />
               {canViewCategories && (
                 <StatTile icon={Layers} label="Categorías" value={stats.categories} hint="Tus temas" />
@@ -168,7 +169,7 @@ export default function DashboardView() {
               <Card>
                 <CardHeader className="flex-row items-center justify-between">
                   <CardTitle className="font-display">Tareas recientes</CardTitle>
-                  <Link href="/tasks" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+                  <Link href="/tasks" className="text-sm font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800">
                     Ver todas
                   </Link>
                 </CardHeader>
@@ -241,7 +242,7 @@ export default function DashboardView() {
                     <CardTitle className="font-display">Usuarios recientes</CardTitle>
                     <Link
                       href="/admin/users"
-                      className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      className="text-sm font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800"
                     >
                       Ver todos
                     </Link>
@@ -270,7 +271,7 @@ export default function DashboardView() {
                     <CardTitle className="font-display">Comentarios recientes</CardTitle>
                     <Link
                       href="/admin/comments"
-                      className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      className="text-sm font-semibold text-brand-700 dark:text-brand-400 hover:text-brand-800"
                     >
                       Moderar
                     </Link>
@@ -320,12 +321,12 @@ function Kpi({
   accent?: boolean;
 }) {
   return (
-    <Card className={accent ? "bg-brand-600 text-white ring-0 shadow-brand" : undefined}>
+    <Card className={accent ? "bg-brand-700 text-white ring-0 shadow-brand" : undefined}>
       <CardContent className="pt-2">
         <p className={accent ? "text-sm text-brand-100" : "text-sm text-muted-foreground"}>{label}</p>
         <p className="font-display text-3xl font-extrabold leading-tight">{value}</p>
         {hint && (
-          <p className={accent ? "text-xs text-brand-100/80" : "text-xs text-muted-foreground"}>{hint}</p>
+          <p className={accent ? "text-xs text-brand-100" : "text-xs text-muted-foreground"}>{hint}</p>
         )}
       </CardContent>
     </Card>
@@ -343,28 +344,19 @@ function StatTile({
   label: string;
   value: number;
   hint?: string;
-  tone?: "accent" | "warn";
+  tone?: "warn";
 }) {
+  // Solo se resalta lo que requiere acción (p. ej. tareas vencidas).
   const warnActive = tone === "warn" && value > 0;
 
   return (
     <BentoGridItem
-      className={
-        tone === "accent"
-          ? "justify-center bg-brand-600 text-white shadow-brand"
-          : warnActive
-            ? "justify-center border-warm-200 bg-warm-50"
-            : "justify-center"
-      }
-      icon={
-        <Icon
-          className={`size-5 ${tone === "accent" ? "text-brand-100" : warnActive ? "text-warm-600" : "text-ink-400"}`}
-        />
-      }
+      className={warnActive ? "space-y-0 border-warm-200 bg-warm-50" : "space-y-0"}
+      icon={<Icon className={`size-5 ${warnActive ? "text-warm-600" : "text-ink-400"}`} />}
       title={
         <span
           className={`font-display text-3xl font-extrabold leading-tight ${
-            tone === "accent" ? "text-white" : warnActive ? "text-neutral-900" : "text-ink-900"
+            warnActive ? "text-neutral-900" : "text-ink-900"
           }`}
         >
           {value}
@@ -372,20 +364,8 @@ function StatTile({
       }
       description={
         <>
-          <span
-            className={`font-semibold ${
-              tone === "accent" ? "text-brand-100" : warnActive ? "text-neutral-700" : "text-ink-600"
-            }`}
-          >
-            {label}
-          </span>
-          {hint && (
-            <span
-              className={`block ${tone === "accent" ? "text-brand-100/80" : warnActive ? "text-neutral-500" : "text-ink-400"}`}
-            >
-              {hint}
-            </span>
-          )}
+          <span className={`font-semibold ${warnActive ? "text-neutral-700" : "text-ink-600"}`}>{label}</span>
+          {hint && <span className={`block ${warnActive ? "text-neutral-600" : "text-ink-400"}`}>{hint}</span>}
         </>
       }
     />
