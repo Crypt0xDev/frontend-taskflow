@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
+import { UiPaginationControl } from "@/components/UiPaginationControl";
+import { useResponsivePageSize } from "@/hooks/useResponsivePageSize";
 import { useSession } from "@/lib/session";
 import { useRoleList } from "@/app/modules/roles/hooks/useRoleList";
 
@@ -39,6 +41,8 @@ export default function UiUserPage() {
   const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<User>();
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | string>("all");
+  const [page, setPage] = useState(1);
+  const [tableRef, pageSize] = useResponsivePageSize<HTMLDivElement>();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -48,6 +52,13 @@ export default function UiUserPage() {
         (!q || u.username.toLowerCase().includes(q)),
     );
   }, [users, query, roleFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const current = Math.min(page, pageCount);
+  const paged = useMemo(
+    () => filtered.slice((current - 1) * pageSize, current * pageSize),
+    [filtered, current, pageSize],
+  );
 
   const selectedIsMe = selected?.id === me?.id;
 
@@ -82,8 +93,11 @@ export default function UiUserPage() {
         <Input
           placeholder="Buscar por usuario…"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="max-w-xs"
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(1);
+          }}
+          className="min-w-0 flex-1 sm:max-w-xs"
         />
         <Select
           items={{
@@ -91,9 +105,12 @@ export default function UiUserPage() {
             ...Object.fromEntries(roles.map((r) => [r.name, r.name])),
           }}
           value={roleFilter}
-          onValueChange={(v) => setRoleFilter(v ?? "all")}
+          onValueChange={(v) => {
+            setRoleFilter(v ?? "all");
+            setPage(1);
+          }}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-36 shrink-0 sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -108,13 +125,13 @@ export default function UiUserPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-2 rounded-3xl border border-ink-100 bg-surface p-4 shadow-soft">
+        <div ref={tableRef} className="space-y-2 rounded-3xl border border-ink-100 bg-surface p-4 shadow-soft">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-10" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="animate-fade-up rounded-3xl border border-dashed border-ink-200 bg-surface p-10 text-center shadow-soft">
+        <div ref={tableRef} className="animate-fade-up rounded-3xl border border-dashed border-ink-200 bg-surface p-10 text-center shadow-soft">
           <p className="font-display font-semibold">Sin resultados</p>
           <p className="mt-1 text-sm text-ink-500">
             {query || roleFilter !== "all"
@@ -123,69 +140,130 @@ export default function UiUserPage() {
           </p>
         </div>
       ) : (
-        <div className="animate-fade-up overflow-hidden rounded-3xl border border-ink-100 bg-surface shadow-soft">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Correo</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Alta</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((u) => {
-                const isMe = u.id === me?.id;
-                return (
-                  <UiSelectableRow key={u.id} selected={isSelected(u)} onSelect={() => toggle(u)}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                          <AvatarFallback className="bg-brand-100 text-xs font-bold text-brand-700">
-                            {u.username.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">
-                          {u.username}
-                          {isMe && (
-                            <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs text-ink-500">
-                              tú
-                            </span>
-                          )}
-                        </span>
+        <div ref={tableRef} className="animate-fade-up space-y-2 sm:space-y-0">
+          {/* Móvil: tarjetas apiladas, sin scroll lateral */}
+          <div className="space-y-2 sm:hidden">
+            {paged.map((u) => {
+              const isMe = u.id === me?.id;
+              return (
+                <div
+                  key={u.id}
+                  onClick={() => toggle(u)}
+                  data-state={isSelected(u) ? "selected" : undefined}
+                  className="cursor-pointer rounded-2xl border border-ink-100 bg-surface p-3 shadow-soft data-[state=selected]:bg-muted"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-8 shrink-0">
+                      <AvatarFallback className="bg-brand-100 text-xs font-bold text-brand-700">
+                        {u.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">{u.username}</span>
+                        {isMe && (
+                          <span className="shrink-0 rounded-full bg-ink-100 px-2 py-0.5 text-xs text-ink-500">
+                            tú
+                          </span>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{u.email ?? "—"}</TableCell>
-                    {/* Role change must not toggle row selection */}
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Select
-                        items={Object.fromEntries(roles.map((r) => [String(r.id), r.name]))}
-                        value={String(u.role.id)}
-                        disabled={isMe || !canUpdate}
-                        onValueChange={(v) => changeRole(u.id, Number(v))}
-                      >
-                        <SelectTrigger className="w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roles.map((r) => (
-                            <SelectItem key={r.id} value={String(r.id)}>
-                              {r.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-ink-500">
+                      <p className="truncate text-xs text-muted-foreground">{u.email ?? "—"}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                    <span className="text-xs text-ink-500">
                       {new Date(u.created_at).toLocaleDateString("es")}
-                    </TableCell>
-                  </UiSelectableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                    </span>
+                    <Select
+                      items={Object.fromEntries(roles.map((r) => [String(r.id), r.name]))}
+                      value={String(u.role.id)}
+                      disabled={isMe || !canUpdate}
+                      onValueChange={(v) => changeRole(u.id, Number(v))}
+                    >
+                      <SelectTrigger className="w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((r) => (
+                          <SelectItem key={r.id} value={String(r.id)}>
+                            {r.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tablet y superior: tabla */}
+          <div className="hidden overflow-hidden rounded-3xl border border-ink-100 bg-surface shadow-soft sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuario</TableHead>
+                  <TableHead>Correo</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead className="hidden md:table-cell">Alta</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paged.map((u) => {
+                  const isMe = u.id === me?.id;
+                  return (
+                    <UiSelectableRow key={u.id} selected={isSelected(u)} onSelect={() => toggle(u)}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-8">
+                            <AvatarFallback className="bg-brand-100 text-xs font-bold text-brand-700">
+                              {u.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">
+                            {u.username}
+                            {isMe && (
+                              <span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs text-ink-500">
+                                tú
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{u.email ?? "—"}</TableCell>
+                      {/* Role change must not toggle row selection */}
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          items={Object.fromEntries(roles.map((r) => [String(r.id), r.name]))}
+                          value={String(u.role.id)}
+                          disabled={isMe || !canUpdate}
+                          onValueChange={(v) => changeRole(u.id, Number(v))}
+                        >
+                          <SelectTrigger className="w-36">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roles.map((r) => (
+                              <SelectItem key={r.id} value={String(r.id)}>
+                                {r.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="hidden text-ink-500 md:table-cell">
+                        {new Date(u.created_at).toLocaleDateString("es")}
+                      </TableCell>
+                    </UiSelectableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
+
+      <UiPaginationControl page={current} pageCount={pageCount} onPageChange={setPage} />
 
       <UiUserViewSheet
         open={viewing !== null}
