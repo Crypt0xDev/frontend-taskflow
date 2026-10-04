@@ -13,13 +13,16 @@ import type { Comment } from "../type/typeCommentBase";
 export function useCommentModeration() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       setComments(await serviceCommentList());
     } catch (error) {
+      setError(true);
       toast.error(
         error instanceof ApiError ? error.message : "No se pudieron cargar los comentarios.",
       );
@@ -52,5 +55,5 @@ export function useCommentModeration() {
     );
   }, [comments, query]);
 
-  return { comments: filtered, total: comments.length, loading, query, setQuery, remove };
+  return { comments: filtered, total: comments.length, loading, error, reload: load, query, setQuery, remove };
 }

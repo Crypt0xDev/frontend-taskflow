@@ -7,6 +7,7 @@ import { UiActionToolbar } from "@/components/UiActionToolbar";
 import { useTrash } from "@/hooks/useTrash";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
+import { UiLoadError } from "@/components/UiLoadError";
 import { UiSelectableRow } from "@/components/UiSelectableRow";
 import { UiTrashSheet } from "@/components/UiTrashSheet";
 import { Button } from "@/components/ui/button";
@@ -23,13 +24,13 @@ import {
   serviceTagForceDelete,
   serviceTagRestore,
   serviceTagTrashed,
-} from "./services/serviceTagTrash";
+} from "./services";
 import type { Tag } from "./type/typeTagBase";
 import { UiTagForm } from "./ui/UiTagForm";
 import { UiTagView } from "./ui/UiTagView";
 
 export default function UiTagPage() {
-  const { tags, loading, reload, remove } = useTagList();
+  const { tags, loading, error, reload, remove } = useTagList();
   const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Tag>();
   const { hasPermission } = useSession();
   const canCreate = hasPermission("tags", "create");
@@ -71,6 +72,7 @@ export default function UiTagPage() {
   }
 
   function openEdit(tag: Tag) {
+    setViewing(null);
     setEditing(tag);
     setFormOpen(true);
   }
@@ -85,6 +87,7 @@ export default function UiTagPage() {
         onView={() => selected && setViewing(selected)}
         onEdit={canUpdate ? () => selected && openEdit(selected) : undefined}
         onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
+        hideSelectionActionsOnMobile
         end={
           canDelete ? (
             <Button variant="outline" onClick={() => setTrashOpen(true)}>
@@ -124,6 +127,8 @@ export default function UiTagPage() {
             <Skeleton key={i} className="h-10" />
           ))}
         </div>
+      ) : error && tags.length === 0 ? (
+        <UiLoadError message="No se pudieron cargar las etiquetas." onRetry={reload} />
       ) : filtered.length === 0 ? (
         <div className="animate-fade-up rounded-md border p-10 text-center">
           <p className="font-medium">
@@ -140,11 +145,11 @@ export default function UiTagPage() {
           {/* Móvil: tarjetas apiladas, sin scroll lateral */}
           <div className="space-y-2 sm:hidden">
             {filtered.map((tag) => (
-              <div
+              <button
+                type="button"
                 key={tag.id}
-                onClick={() => toggle(tag)}
-                data-state={isSelected(tag) ? "selected" : undefined}
-                className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+                onClick={() => setViewing(tag)}
+                className="block w-full rounded-md border p-3 text-left transition-colors active:bg-muted"
               >
                 <div className="flex items-center gap-2">
                   <span
@@ -162,7 +167,7 @@ export default function UiTagPage() {
                   <span>{tag.tasks_count ?? 0} tareas</span>
                   <span>{formatDateTime(tag.created_at)}</span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -210,6 +215,19 @@ export default function UiTagPage() {
         open={viewing !== null}
         onOpenChange={(open) => !open && setViewing(null)}
         tag={viewing}
+        actions={
+          viewing
+            ? {
+                onEdit: canUpdate ? () => openEdit(viewing) : undefined,
+                onDelete: canDelete
+                  ? () => {
+                      setViewing(null);
+                      setDeleting(viewing);
+                    }
+                  : undefined,
+              }
+            : undefined
+        }
       />
 
       <UiTrashSheet

@@ -2,4 +2,6 @@ import { apiFetchAllPages } from "@/lib/api";
 
 import type { Tag } from "../type/typeTagBase";
 
-export const serviceTagList = () => apiFetchAllPages<Tag>("/tags");
+export function serviceTagTrashed() {
+  return apiFetchAllPages<Tag>("/tags/trashed");
+}

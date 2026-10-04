@@ -1,6 +1,6 @@
 "use client";
 
-import { UiViewField, UiViewSheet } from "@/components/UiViewSheet";
+import { UiViewField, UiViewSheet, type ViewSheetActions } from "@/components/UiViewSheet";
 
 import type { Tag } from "../type/typeTagBase";
 
@@ -8,9 +8,10 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tag: Tag | null;
+  actions?: ViewSheetActions;
 };
 
-export function UiTagView({ open, onOpenChange, tag }: Props) {
+export function UiTagView({ open, onOpenChange, tag, actions }: Props) {
   return (
     <UiViewSheet
       open={open}
@@ -18,6 +19,7 @@ export function UiTagView({ open, onOpenChange, tag }: Props) {
       title="Detalle de la etiqueta"
       description="Información de la etiqueta."
       empty={tag ? undefined : "No se encontró la etiqueta."}
+      actions={actions}
     >
       {tag && (
         <>

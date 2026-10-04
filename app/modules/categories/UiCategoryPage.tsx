@@ -26,7 +26,7 @@ import {
   serviceCategoryForceDelete,
   serviceCategoryRestore,
   serviceCategoryTrashed,
-} from "./services/serviceCategoryTrash";
+} from "./services";
 import { UiCategoryForm } from "./ui/UiCategoryForm";
 import { UiCategoryView } from "./ui/UiCategoryView";
 

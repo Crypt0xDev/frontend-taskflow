@@ -6,6 +6,7 @@ import { UiActionToolbar } from "@/components/UiActionToolbar";
 import { useRowSelection } from "@/hooks/useRowSelection";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
+import { UiLoadError } from "@/components/UiLoadError";
 import { UiSelectableRow } from "@/components/UiSelectableRow";
 import { UiViewField, UiViewSheet } from "@/components/UiViewSheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,11 +16,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDateTime } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 
-import { useCommentModeration } from "../hooks/useCommentModeration";
-import type { Comment } from "../type/typeCommentBase";
+import { useCommentModeration } from "./hooks/useCommentModeration";
+import type { Comment } from "./type/typeCommentBase";
 
-export default function UiCommentModeration() {
-  const { comments, total, loading, query, setQuery, remove } = useCommentModeration();
+export default function UiCommentModerationPage() {
+  const { comments, total, loading, error, reload, query, setQuery, remove } = useCommentModeration();
   const { hasPermission } = useSession();
   const canDelete = hasPermission("comments", "delete");
   const [deleting, setDeleting] = useState<Comment | null>(null);
@@ -37,6 +38,7 @@ export default function UiCommentModeration() {
         hasSelection={hasSelection}
         onView={() => selected && setViewing(selected)}
         onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
+        hideSelectionActionsOnMobile
       />
 
       <Input
@@ -52,6 +54,8 @@ export default function UiCommentModeration() {
             <Skeleton key={i} className="h-10" />
           ))}
         </div>
+      ) : error && total === 0 ? (
+        <UiLoadError message="No se pudieron cargar los comentarios." onRetry={reload} />
       ) : comments.length === 0 ? (
         <div className="animate-fade-up rounded-md border p-10 text-center">
           <p className="font-medium">No hay comentarios</p>
@@ -61,14 +65,13 @@ export default function UiCommentModeration() {
         </div>
       ) : (
         <div className="animate-fade-up space-y-2 sm:space-y-0">
-          {/* Móvil: tarjetas apiladas, sin scroll lateral */}
           <div className="space-y-2 sm:hidden">
             {comments.map((c) => (
-              <div
+              <button
+                type="button"
                 key={c.id}
-                onClick={() => toggle(c)}
-                data-state={isSelected(c) ? "selected" : undefined}
-                className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+                onClick={() => setViewing(c)}
+                className="block w-full rounded-md border p-3 text-left transition-colors active:bg-muted"
               >
                 <div className="flex items-center gap-2.5">
                   <Avatar className="size-8 shrink-0">
@@ -84,11 +87,10 @@ export default function UiCommentModeration() {
                   </span>
                 </div>
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{c.body}</p>
-              </div>
+              </button>
             ))}
           </div>
 
-          {/* Tablet y superior: tabla */}
           <div className="hidden rounded-md border sm:block">
             <Table>
               <TableHeader>
@@ -131,6 +133,16 @@ export default function UiCommentModeration() {
         title="Detalle del comentario"
         description="Contenido completo publicado."
         empty={viewing ? undefined : "No se encontró el comentario."}
+        actions={
+          viewing && canDelete
+            ? {
+                onDelete: () => {
+                  setViewing(null);
+                  setDeleting(viewing);
+                },
+              }
+            : undefined
+        }
       >
         {viewing && (
           <>

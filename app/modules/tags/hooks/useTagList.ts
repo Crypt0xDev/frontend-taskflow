@@ -17,12 +17,15 @@ import type { Tag } from "../type/typeTagBase";
 export function useTagList() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       setTags(await serviceTagList());
     } catch (error) {
+      setError(true);
       toast.error(error instanceof ApiError ? error.message : "No se pudieron cargar las etiquetas.");
     } finally {
       setLoading(false);
@@ -44,5 +47,5 @@ export function useTagList() {
     }
   }, []);
 
-  return { tags, loading, reload: load, remove };
+  return { tags, loading, error, reload: load, remove };
 }
