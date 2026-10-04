@@ -1,17 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
+import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
-import { useTaskList } from "@/app/modules/tasks/hooks";
+import { useCategoryOptions } from "@/app/modules/categories/hooks";
+import { useTaskDelete, useTaskList, useTaskUpdate } from "@/app/modules/tasks/hooks";
 import { PRIORITY_LABELS, type Task, type TaskPriority } from "@/app/modules/tasks/type";
+import type { TaskInput } from "@/app/modules/tasks/type/typeTaskInput";
+import { UiTaskForm } from "@/app/modules/tasks/ui/UiTaskForm";
+import { UiTaskPriorityBadge } from "@/app/modules/tasks/ui/UiTaskPriorityBadge";
+import { UiTaskStatusBadge } from "@/app/modules/tasks/ui/UiTaskStatusBadge";
+import { UiTaskView } from "@/app/modules/tasks/ui/UiTaskView";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+// Iniciales en móvil: "X" para miércoles evita la doble "M".
+const WEEKDAY_INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
 const MONTHS = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
@@ -29,10 +40,32 @@ function ymd(date: Date): string {
   ).padStart(2, "0")}`;
 }
 
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function isOverdue(task: Task, todayKey: string): boolean {
+  return task.status !== "completed" && !!task.due_date && task.due_date < todayKey;
+}
+
 export default function UiCalendarPage() {
-  const { tasks, loading } = useTaskList();
+  const { tasks, loading, reload } = useTaskList();
+  const { update } = useTaskUpdate();
+  const { remove } = useTaskDelete();
+  const categories = useCategoryOptions();
+  const { hasPermission } = useSession();
+  const canCreate = hasPermission("tasks", "create");
+  const canUpdate = hasPermission("tasks", "update");
+  const canDelete = hasPermission("tasks", "delete");
+
   const today = new Date();
+  const todayKey = ymd(today);
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  // Móvil: día cuyas tareas se listan bajo la cuadrícula.
+  const [selectedKey, setSelectedKey] = useState(todayKey);
+  const [viewing, setViewing] = useState<Task | null>(null);
+  const [editing, setEditing] = useState<Task | null>(null);
+  const [deleting, setDeleting] = useState<Task | null>(null);
   const byDay = useMemo(() => {
     const map: Record<string, Task[]> = {};
     for (const t of tasks) {
@@ -53,7 +86,27 @@ export default function UiCalendarPage() {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const todayKey = ymd(today);
+  function goToMonth(offset: number) {
+    const next = new Date(year, month + offset, 1);
+    setCursor(next);
+    const isCurrentMonth = next.getFullYear() === today.getFullYear() && next.getMonth() === today.getMonth();
+    setSelectedKey(isCurrentMonth ? todayKey : ymd(next));
+  }
+
+  function goToToday() {
+    setCursor(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedKey(todayKey);
+  }
+
+  async function handleEditSubmit(values: TaskInput) {
+    if (!editing) return;
+    const result = await update(editing.id, values);
+    reload();
+    return result;
+  }
+
+  const selectedDate = new Date(`${selectedKey}T00:00:00`);
+  const selectedTasks = byDay[selectedKey] ?? [];
 
   return (
     <div className="space-y-4">
@@ -62,16 +115,17 @@ export default function UiCalendarPage() {
         description="Tus tareas organizadas por fecha de vencimiento."
         action={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" aria-label="Mes anterior"
-              onClick={() => setCursor(new Date(year, month - 1, 1))}>
+            <Button variant="outline" size="icon" aria-label="Mes anterior" onClick={() => goToMonth(-1)}>
               <ChevronLeft className="size-4" />
             </Button>
-            <span className="min-w-40 text-center text-sm font-medium capitalize">
+            <span aria-live="polite" className="min-w-32 text-center text-sm font-medium capitalize sm:min-w-40">
               {MONTHS[month]} {year}
             </span>
-            <Button variant="outline" size="icon" aria-label="Mes siguiente"
-              onClick={() => setCursor(new Date(year, month + 1, 1))}>
+            <Button variant="outline" size="icon" aria-label="Mes siguiente" onClick={() => goToMonth(1)}>
               <ChevronRight className="size-4" />
+            </Button>
+            <Button variant="outline" className="sm:hidden" onClick={goToToday}>
+              Hoy
             </Button>
           </div>
         }
@@ -81,56 +135,107 @@ export default function UiCalendarPage() {
         <Skeleton className="h-96 rounded-md" />
       ) : (
         <>
-          {/* Móvil: agenda apilada por día, sin scroll lateral */}
-          <div className="animate-fade-up space-y-3 sm:hidden">
-            {cells
-              .filter((date): date is Date => date !== null)
-              .map((date) => {
-                const key = ymd(date);
-                const dayTasks = byDay[key] ?? [];
-                const isToday = key === todayKey;
-                if (dayTasks.length === 0 && !isToday) return null;
-                return (
-                  <div key={key} className="rounded-md border p-3">
-                    <div className="mb-2 flex items-center gap-2">
+          {/* Móvil: mes compacto + tareas del día elegido */}
+          <div className="animate-fade-up space-y-4 sm:hidden">
+            <div className="rounded-md border p-2">
+              <div aria-hidden="true" className="grid grid-cols-7 text-center text-xs font-medium text-muted-foreground">
+                {WEEKDAY_INITIALS.map((d) => (
+                  <div key={d} className="py-1">{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {cells.map((date, i) => {
+                  if (!date) return <div key={`empty-${i}`} />;
+                  const key = ymd(date);
+                  const dayTasks = byDay[key] ?? [];
+                  const overdue = dayTasks.some((t) => isOverdue(t, todayKey));
+                  const isToday = key === todayKey;
+                  const isSelected = key === selectedKey;
+                  const count = dayTasks.length;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedKey(key)}
+                      aria-pressed={isSelected}
+                      aria-label={`${date.getDate()} de ${MONTHS[month]}${
+                        count ? `, ${count} ${count === 1 ? "tarea" : "tareas"}` : ""
+                      }${overdue ? ", con vencidas" : ""}`}
+                      className="flex h-12 flex-col items-center justify-center gap-1 rounded-lg"
+                    >
                       <span
                         className={cn(
-                          "inline-grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold",
-                          isToday ? "bg-brand-700 text-white" : "bg-muted text-muted-foreground",
+                          "grid size-7 place-items-center rounded-full text-sm",
+                          isSelected
+                            ? "bg-brand-700 font-semibold text-white"
+                            : isToday
+                              ? "font-semibold text-brand-700 ring-1 ring-brand-700 dark:text-brand-400 dark:ring-brand-400"
+                              : "text-ink-900",
                         )}
                       >
                         {date.getDate()}
                       </span>
-                      <span className="text-sm font-medium capitalize">
-                        {WEEKDAYS[(date.getDay() + 6) % 7]} · {MONTHS[date.getMonth()]}
-                      </span>
-                    </div>
-                    {dayTasks.length === 0 ? (
-                      <p className="pl-8 text-xs text-muted-foreground">Sin tareas</p>
-                    ) : (
-                      <div className="space-y-1.5 pl-8">
-                        {dayTasks.map((t) => (
-                          <div
-                            key={t.id}
-                            className={cn(
-                              "flex items-center gap-1.5 text-sm",
-                              t.status === "completed" && "text-muted-foreground line-through",
-                            )}
-                          >
-                            <span className={cn("size-1.5 shrink-0 rounded-full", DOT[t.priority])} />
-                            <span className="truncate">{t.title}</span>
-                          </div>
+                      <span className="flex h-1.5 gap-0.5" aria-hidden="true">
+                        {Array.from({ length: Math.min(count, 3) }).map((_, n) => (
+                          <span
+                            key={n}
+                            className={cn("size-1.5 rounded-full", overdue ? "bg-red-500" : "bg-ink-400")}
+                          />
                         ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            {cells.every((date) => !date || (byDay[ymd(date)] ?? []).length === 0) && (
-              <div className="rounded-md border p-10 text-center">
-                <p className="font-medium">No hay tareas este mes</p>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            </div>
+
+            <section aria-live="polite" className="space-y-2">
+              <h2 className="text-sm font-semibold">
+                {capitalize(selectedDate.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" }))}
+                {selectedKey === todayKey && <span className="font-normal text-muted-foreground"> · hoy</span>}
+              </h2>
+              {selectedTasks.length === 0 ? (
+                <div className="rounded-md border p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Sin tareas para este día.</p>
+                  {canCreate && (
+                    <Button
+                      variant="outline"
+                      className="mt-3"
+                      render={<Link href="/tasks?new=1" />}
+                      nativeButton={false}
+                    >
+                      <Plus className="size-4" />
+                      Crear tarea
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                selectedTasks.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setViewing(t)}
+                    className="block w-full rounded-md border p-3 text-left transition-colors active:bg-muted"
+                  >
+                    <p
+                      className={cn(
+                        "font-medium",
+                        t.status === "completed" && "text-muted-foreground line-through",
+                      )}
+                    >
+                      {t.title}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <UiTaskStatusBadge status={t.status} />
+                      <UiTaskPriorityBadge priority={t.priority} />
+                      {isOverdue(t, todayKey) && (
+                        <span className="text-xs font-medium text-destructive">Vencida</span>
+                      )}
+                    </div>
+                  </button>
+                ))
+              )}
+            </section>
           </div>
 
           {/* Tablet y superior: cuadrícula mensual */}
@@ -198,6 +303,53 @@ export default function UiCalendarPage() {
           </div>
         </>
       )}
+
+      <UiTaskView
+        open={viewing !== null}
+        onOpenChange={(open) => !open && setViewing(null)}
+        task={viewing}
+        actions={
+          viewing
+            ? {
+                onEdit: canUpdate
+                  ? () => {
+                      setViewing(null);
+                      setEditing(viewing);
+                    }
+                  : undefined,
+                onDelete: canDelete
+                  ? () => {
+                      setViewing(null);
+                      setDeleting(viewing);
+                    }
+                  : undefined,
+              }
+            : undefined
+        }
+      />
+
+      <UiTaskForm
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        task={editing}
+        categories={categories}
+        onSubmit={handleEditSubmit}
+      />
+
+      <UiConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title="¿Enviar a la papelera?"
+        description={deleting ? `La tarea «${deleting.title}» se moverá a la papelera.` : undefined}
+        confirmText="Enviar a papelera"
+        destructive
+        onConfirm={async () => {
+          if (deleting) {
+            await remove(deleting.id);
+            reload();
+          }
+        }}
+      />
     </div>
   );
 }

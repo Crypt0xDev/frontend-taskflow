@@ -9,6 +9,7 @@ import { UiActionToolbar } from "@/components/UiActionToolbar";
 import { useRowSelection } from "@/hooks/useRowSelection";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
+import { UiLoadError } from "@/components/UiLoadError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +31,7 @@ import { UiTaskTrash } from "./ui/UiTaskTrash";
 import { UiTaskView } from "./ui/UiTaskView";
 
 export default function UiTaskPage() {
-  const { tasks, loading, query, setQuery, reload } = useTaskList();
+  const { tasks, loading, error, query, setQuery, reload } = useTaskList();
   const { create } = useTaskCreate();
   const { update } = useTaskUpdate();
   const { remove } = useTaskDelete();
@@ -222,6 +223,9 @@ export default function UiTaskPage() {
       </div>
 
       <div ref={tableRef}>
+        {error && tasks.length === 0 ? (
+          <UiLoadError message="No se pudieron cargar las tareas." onRetry={reload} />
+        ) : (
         <UiTaskList
           tasks={paged}
           loading={loading}
@@ -229,6 +233,7 @@ export default function UiTaskPage() {
           onSelect={toggleSelect}
           onOpen={setViewing}
         />
+        )}
       </div>
 
       <UiPaginationControl page={current} pageCount={pageCount} onPageChange={setPage} />
@@ -263,12 +268,16 @@ export default function UiTaskPage() {
         open={viewing !== null}
         onOpenChange={(open) => !open && setViewing(null)}
         task={viewing}
-        onEdit={canUpdate ? openEdit : undefined}
-        onDelete={
-          canDelete
-            ? (task) => {
-                setViewing(null);
-                setDeleting(task);
+        actions={
+          viewing
+            ? {
+                onEdit: canUpdate ? () => openEdit(viewing) : undefined,
+                onDelete: canDelete
+                  ? () => {
+                      setViewing(null);
+                      setDeleting(viewing);
+                    }
+                  : undefined,
               }
             : undefined
         }

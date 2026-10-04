@@ -1,8 +1,8 @@
-import { apiFetchList } from "@/lib/api";
+import { apiFetchAllPages } from "@/lib/api";
 
 import type { Task } from "../type/typeTaskBase";
 
 export function serviceTaskList(q?: string) {
   const query = q ? `?q=${encodeURIComponent(q)}` : "";
-  return apiFetchList<Task>(`/tasks${query}`);
+  return apiFetchAllPages<Task>(`/tasks${query}`);
 }

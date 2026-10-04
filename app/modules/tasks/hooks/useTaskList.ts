@@ -11,13 +11,16 @@ import type { Task } from "../type/typeTaskBase";
 export function useTaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
 
   const load = useCallback(async (q?: string) => {
     setLoading(true);
+    setError(false);
     try {
       setTasks(await serviceTaskList(q));
     } catch (error) {
+      setError(true);
       toast.error(error instanceof ApiError ? error.message : "No se pudieron cargar las tareas.");
     } finally {
       setLoading(false);
@@ -29,5 +32,5 @@ export function useTaskList() {
     return () => clearTimeout(handle);
   }, [query, load]);
 
-  return { tasks, loading, query, setQuery, reload: () => load(query.trim() || undefined) };
+  return { tasks, loading, error, query, setQuery, reload: () => load(query.trim() || undefined) };
 }

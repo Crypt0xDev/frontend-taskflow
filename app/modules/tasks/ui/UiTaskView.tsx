@@ -1,9 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
-
-import { UiViewField, UiViewSheet } from "@/components/UiViewSheet";
-import { Button } from "@/components/ui/button";
+import { UiViewField, UiViewSheet, type ViewSheetActions } from "@/components/UiViewSheet";
 import { formatDateTime } from "@/lib/utils";
 
 import { PRIORITY_LABELS, type Task } from "../type";
@@ -13,11 +10,10 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: Task | null;
-  onEdit?: (task: Task) => void;
-  onDelete?: (task: Task) => void;
+  actions?: ViewSheetActions;
 };
 
-export function UiTaskView({ open, onOpenChange, task, onEdit, onDelete }: Props) {
+export function UiTaskView({ open, onOpenChange, task, actions }: Props) {
   return (
     <UiViewSheet
       open={open}
@@ -25,24 +21,7 @@ export function UiTaskView({ open, onOpenChange, task, onEdit, onDelete }: Props
       title="Detalle de la tarea"
       description="Información completa de la tarea."
       empty={task ? undefined : "No se encontró la tarea."}
-      footer={
-        task && (onEdit || onDelete) ? (
-          <>
-            {onEdit && (
-              <Button className="flex-1" onClick={() => onEdit(task)}>
-                <Pencil className="size-4" />
-                Editar
-              </Button>
-            )}
-            {onDelete && (
-              <Button variant="outline" className="flex-1 text-destructive hover:text-destructive" onClick={() => onDelete(task)}>
-                <Trash2 className="size-4" />
-                Eliminar
-              </Button>
-            )}
-          </>
-        ) : undefined
-      }
+      actions={actions}
     >
       {task && (
         <>
