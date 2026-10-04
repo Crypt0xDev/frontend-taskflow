@@ -1,6 +1,6 @@
 "use client";
 
-import { UiViewField, UiViewSheet } from "@/components/UiViewSheet";
+import { UiViewField, UiViewSheet, type ViewSheetActions } from "@/components/UiViewSheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTime } from "@/lib/utils";
@@ -11,9 +11,10 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
+  actions?: ViewSheetActions;
 };
 
-export function UiUserViewSheet({ open, onOpenChange, user }: Props) {
+export function UiUserView({ open, onOpenChange, user, actions }: Props) {
   return (
     <UiViewSheet
       open={open}
@@ -21,6 +22,7 @@ export function UiUserViewSheet({ open, onOpenChange, user }: Props) {
       title="Detalle del usuario"
       description="Información de la cuenta."
       empty={user ? undefined : "No se encontró el usuario."}
+      actions={actions}
     >
       {user && (
         <>

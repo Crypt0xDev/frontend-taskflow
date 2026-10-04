@@ -1,2 +1,3 @@
 export * from "./useProfileUpdate";
-export * from "./useProfilePassword";
+export * from "./useProfilePasswordUpdate";
+export * from "./useProfileDelete";

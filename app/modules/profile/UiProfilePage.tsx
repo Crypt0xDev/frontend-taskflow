@@ -10,18 +10,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, deferMicrotask } from "@/lib/utils";
-import { AVATARS } from "@/lib/profilePrefs";
+import { AVATARS } from "@/config/constants";
 import { ApiError } from "@/lib/api";
 import { useSession } from "@/lib/session";
 
 import { serviceProfileUpdate } from "./services/serviceProfileUpdate";
-import { useProfilePassword } from "./hooks/useProfilePassword";
+import { useProfilePasswordUpdate } from "./hooks/useProfilePasswordUpdate";
 import { useProfileUpdate } from "./hooks/useProfileUpdate";
+import { UiProfileDeleteCard } from "./ui/UiProfileDeleteCard";
 
 export default function UiProfilePage() {
   const { user, updateUser } = useSession();
   const profile = useProfileUpdate();
-  const password = useProfilePassword();
+  const password = useProfilePasswordUpdate();
 
   const [birthDate, setBirthDate] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -95,6 +96,24 @@ export default function UiProfilePage() {
                     </FormItem>
                   )}
                 />
+                {profile.emailChanged && (
+                  <FormField
+                    control={profile.form.control}
+                    name="current_password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contraseña actual</FormLabel>
+                        <FormControl>
+                          <Input type="password" autoComplete="current-password" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Para cambiar el correo confirma tu contraseña. Tendrás que verificar el nuevo correo.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <div>
                   <p className="text-xs text-muted-foreground">Rol</p>
                   <p className="text-sm font-medium">
@@ -112,7 +131,7 @@ export default function UiProfilePage() {
         </Card>
 
         {/* Password */}
-        <Card className="animate-fade-up" style={{ animationDelay: ".05s" }}>
+        <Card className="animate-fade-up animate-delay-50">
           <CardHeader>
             <CardTitle className="font-display">Cambiar contraseña</CardTitle>
           </CardHeader>
@@ -170,7 +189,7 @@ export default function UiProfilePage() {
       </div>
 
       {/* Cosmetic preferences (client-side): age + avatar */}
-      <Card className="animate-fade-up" style={{ animationDelay: ".1s" }}>
+      <Card className="animate-fade-up animate-delay-100">
         <CardHeader>
           <CardTitle className="font-display">Preferencias</CardTitle>
         </CardHeader>
@@ -214,6 +233,8 @@ export default function UiProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      <UiProfileDeleteCard />
     </div>
   );
 }

@@ -7,8 +7,10 @@ import { UiActionToolbar } from "@/components/UiActionToolbar";
 import { useRowSelection } from "@/hooks/useRowSelection";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
+import { UiLoadError } from "@/components/UiLoadError";
 import { UiSelectableRow } from "@/components/UiSelectableRow";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
@@ -24,10 +26,10 @@ import type { User } from "./type";
 import { UiUserCreateForm } from "./ui/UiUserCreateForm";
 import { UiUserEditForm } from "./ui/UiUserEditForm";
 import { UiUserResetPasswordForm } from "./ui/UiUserResetPasswordForm";
-import { UiUserViewSheet } from "./ui/UiUserViewSheet";
+import { UiUserView } from "./ui/UiUserView";
 
 export default function UiUserPage() {
-  const { users, loading, reload, changeRole, remove } = useUserList();
+  const { users, loading, error, reload, changeRole, remove } = useUserList();
   const { user: me, hasPermission } = useSession();
   const { roles } = useRoleList();
   const canCreate = hasPermission("users", "create");
@@ -77,9 +79,11 @@ export default function UiUserPage() {
         onEdit={canUpdate ? () => selected && setEditing(selected) : undefined}
         onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
         deleteDisabled={selectedIsMe}
+        hideSelectionActionsOnMobile
         start={
           <Button
             variant="outline"
+            className="hidden sm:inline-flex"
             disabled={!hasSelection || !canUpdate}
             onClick={() => selected && setResetting(selected)}
           >
@@ -110,7 +114,7 @@ export default function UiUserPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-36 shrink-0 sm:w-40">
+          <SelectTrigger aria-label="Filtrar por rol" className="w-36 shrink-0 sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -130,6 +134,10 @@ export default function UiUserPage() {
             <Skeleton key={i} className="h-10" />
           ))}
         </div>
+      ) : error && users.length === 0 ? (
+        <div ref={tableRef}>
+          <UiLoadError message="No se pudieron cargar los usuarios." onRetry={reload} />
+        </div>
       ) : filtered.length === 0 ? (
         <div ref={tableRef} className="animate-fade-up rounded-3xl border border-dashed border-ink-200 bg-surface p-10 text-center shadow-soft">
           <p className="font-display font-semibold">Sin resultados</p>
@@ -146,11 +154,11 @@ export default function UiUserPage() {
             {paged.map((u) => {
               const isMe = u.id === me?.id;
               return (
-                <div
+                <button
+                  type="button"
                   key={u.id}
-                  onClick={() => toggle(u)}
-                  data-state={isSelected(u) ? "selected" : undefined}
-                  className="cursor-pointer rounded-2xl border border-ink-100 bg-surface p-3 shadow-soft data-[state=selected]:bg-muted"
+                  onClick={() => setViewing(u)}
+                  className="block w-full rounded-2xl border border-ink-100 bg-surface p-3 text-left shadow-soft transition-colors active:bg-muted"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="size-8 shrink-0">
@@ -170,29 +178,13 @@ export default function UiUserPage() {
                       <p className="truncate text-xs text-muted-foreground">{u.email ?? "—"}</p>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="mt-3 flex items-center justify-between gap-2">
                     <span className="text-xs text-ink-500">
                       {new Date(u.created_at).toLocaleDateString("es")}
                     </span>
-                    <Select
-                      items={Object.fromEntries(roles.map((r) => [String(r.id), r.name]))}
-                      value={String(u.role.id)}
-                      disabled={isMe || !canUpdate}
-                      onValueChange={(v) => changeRole(u.id, Number(v))}
-                    >
-                      <SelectTrigger className="w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roles.map((r) => (
-                          <SelectItem key={r.id} value={String(r.id)}>
-                            {r.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Badge variant={u.role.name === "admin" ? "default" : "secondary"}>{u.role.name}</Badge>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -239,7 +231,7 @@ export default function UiUserPage() {
                           disabled={isMe || !canUpdate}
                           onValueChange={(v) => changeRole(u.id, Number(v))}
                         >
-                          <SelectTrigger className="w-36">
+                          <SelectTrigger aria-label={`Rol de ${u.username}`} className="w-36">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -265,10 +257,42 @@ export default function UiUserPage() {
 
       <UiPaginationControl page={current} pageCount={pageCount} onPageChange={setPage} />
 
-      <UiUserViewSheet
+      <UiUserView
         open={viewing !== null}
         onOpenChange={(open) => !open && setViewing(null)}
         user={viewing}
+        actions={
+          viewing
+            ? {
+                extra: canUpdate ? (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setViewing(null);
+                      setResetting(viewing);
+                    }}
+                  >
+                    <KeyRound className="size-4" />
+                    Restablecer contraseña
+                  </Button>
+                ) : undefined,
+                onEdit: canUpdate
+                  ? () => {
+                      setViewing(null);
+                      setEditing(viewing);
+                    }
+                  : undefined,
+                onDelete: canDelete
+                  ? () => {
+                      setViewing(null);
+                      setDeleting(viewing);
+                    }
+                  : undefined,
+                deleteDisabled: viewing.id === me?.id,
+              }
+            : undefined
+        }
       />
 
       <UiUserEditForm

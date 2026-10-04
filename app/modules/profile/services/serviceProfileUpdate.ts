@@ -4,6 +4,7 @@ import type { User } from "@/lib/session";
 export function serviceProfileUpdate(data: {
   user_name?: string;
   email?: string;
+  current_password?: string;
   birth_date?: string | null;
   avatar?: string | null;
 }) {

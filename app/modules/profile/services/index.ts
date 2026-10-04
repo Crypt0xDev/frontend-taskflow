@@ -1,2 +1,3 @@
 export * from "./serviceProfileUpdate";
-export * from "./serviceProfilePassword";
+export * from "./serviceProfilePasswordUpdate";
+export * from "./serviceProfileDelete";

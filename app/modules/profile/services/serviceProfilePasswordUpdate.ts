@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api";
 
-export function serviceProfilePassword(data: {
+export function serviceProfilePasswordUpdate(data: {
   current_password: string;
   password: string;
   password_confirmation: string;

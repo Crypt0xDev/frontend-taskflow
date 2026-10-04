@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
 import { useSession } from "@/lib/session";
 
-import { serviceProfilePassword } from "../services/serviceProfilePassword";
+import { serviceProfilePasswordUpdate } from "../services/serviceProfilePasswordUpdate";
 import { serviceProfileUpdate } from "../services/serviceProfileUpdate";
 
-export function UiForcePasswordChange() {
+export function UiProfilePasswordForce() {
   const { user, updateUser, logout } = useSession();
   const initialName = user?.username && !user.username.includes("@") ? user.username : "";
   const [username, setUsername] = useState(initialName);
@@ -46,7 +46,7 @@ export function UiForcePasswordChange() {
         const updated = await serviceProfileUpdate({ user_name: trimmedName });
         nextUsername = updated?.username ?? trimmedName;
       }
-      await serviceProfilePassword({
+      await serviceProfilePasswordUpdate({
         current_password: current,
         password: next,
         password_confirmation: confirm,

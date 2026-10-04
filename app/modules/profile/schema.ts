@@ -3,6 +3,8 @@ import { z } from "zod";
 export const profileSchema = z.object({
   username: z.string().min(1, "El nombre es obligatorio").min(3, "Mínimo 3 caracteres").max(255),
   email: z.string().min(1, "El correo es obligatorio").email("Correo no válido"),
+  // Solo se exige si cambia el correo (lo valida el hook, que conoce el correo actual).
+  current_password: z.string().optional(),
 });
 
 export type ProfileValues = z.infer<typeof profileSchema>;
@@ -19,3 +21,9 @@ export const passwordSchema = z
   });
 
 export type PasswordValues = z.infer<typeof passwordSchema>;
+
+export const deleteAccountSchema = z.object({
+  current_password: z.string().min(1, "Confirma tu contraseña para eliminar la cuenta"),
+});
+
+export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;

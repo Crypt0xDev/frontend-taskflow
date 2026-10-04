@@ -18,12 +18,15 @@ function errorMessage(error: unknown): string {
 export function useUserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       setUsers(await serviceUserList());
     } catch (error) {
+      setError(true);
       toast.error(errorMessage(error));
     } finally {
       setLoading(false);
@@ -54,5 +57,5 @@ export function useUserList() {
     }
   }, []);
 
-  return { users, loading, reload: load, changeRole, remove };
+  return { users, loading, error, reload: load, changeRole, remove };
 }

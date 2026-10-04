@@ -7,10 +7,10 @@ import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
 import { apiFieldErrors } from "@/lib/form";
 
-import { serviceProfilePassword } from "../services/serviceProfilePassword";
+import { serviceProfilePasswordUpdate } from "../services/serviceProfilePasswordUpdate";
 import { passwordSchema, type PasswordValues } from "../schema";
 
-export function useProfilePassword() {
+export function useProfilePasswordUpdate() {
   const form = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues: { current_password: "", password: "", password_confirmation: "" },
@@ -18,7 +18,7 @@ export function useProfilePassword() {
 
   const submit = form.handleSubmit(async (values) => {
     try {
-      await serviceProfilePassword(values);
+      await serviceProfilePasswordUpdate(values);
       form.reset();
       toast.success("Contraseña actualizada.");
     } catch (error) {
