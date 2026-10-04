@@ -43,7 +43,7 @@ const STEPS = [
   },
 ];
 
-export default function AboutPage() {
+export default function AboutRoute() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
       <span className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-700">

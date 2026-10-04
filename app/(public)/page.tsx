@@ -3,10 +3,15 @@ import Link from "next/link";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 
-export default function Home() {
+export const metadata = {
+  title: "Inicio",
+  description:
+    "TaskFlow es la herramienta de gestión de tareas que te ayuda a capturar, priorizar y completar tus actividades diarias de manera rápida y sencilla.",
+};
+
+export default function HomeRoute() {
   return (
     <main>
-      {/* Hero */}
       <AuroraBackground className="overflow-hidden" showRadialGradient>
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 sm:py-28 lg:grid-cols-2">
           <div>
@@ -16,8 +21,7 @@ export default function Home() {
             </span>
 
             <h1
-              className="animate-fade-up mt-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-6xl"
-              style={{ animationDelay: ".08s" }}
+              className="animate-fade-up mt-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-6xl animate-delay-80"
             >
               Haz que las cosas{" "}
               <span className="relative whitespace-nowrap text-brand-600">
@@ -39,7 +43,7 @@ export default function Home() {
               className="mt-6 max-w-md text-lg font-normal text-ink-500"
             />
 
-            <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: ".24s" }}>
+            <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3 animate-delay-240">
               <Link
                 href="/register"
                 className="rounded-full bg-brand-700 px-6 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-800"
@@ -54,24 +58,23 @@ export default function Home() {
               </Link>
             </div>
 
-            <p className="animate-fade-up mt-5 text-sm text-ink-400" style={{ animationDelay: ".32s" }}>
+            <p className="animate-fade-up mt-5 text-sm text-ink-400 animate-delay-320">
               Sin tarjeta. Listo en un minuto.
             </p>
           </div>
 
-          {/* Floating mock card */}
-          <div className="animate-fade-up relative" style={{ animationDelay: ".2s" }}>
-            <div className="animate-float">
-              <div className="rotate-[1.5deg] rounded-4xl border border-ink-100 bg-surface p-5 shadow-soft">
+          <div className="animate-fade-up relative animate-delay-200">
+            <div className="animate-float-soft">
+              <div className="rotate-[1.5deg] rounded-4xl border border-ink-100 bg-surface p-5 shadow-soft dark:border-ink-200 dark:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.7)]">
                 <div className="mb-3 flex items-center justify-between px-1">
                   <p className="font-display font-bold text-ink-900">Hoy</p>
-                  <span className="text-xs font-semibold text-ink-400">3 de 5</span>
+                  <span className="text-xs font-semibold text-ink-400">1 de 3</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 rounded-2xl border-l-4 border-warm-500 bg-ink-50 p-3">
                     <span className="size-5 shrink-0 rounded-full border-2 border-warm-500" />
                     <span className="text-sm font-medium">Enviar propuesta al cliente</span>
-                    <span className="ml-auto rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-bold text-warm-700">
+                    <span className="ml-auto rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-bold text-warm-700 dark:bg-warm-500/15 dark:text-warm-400">
                       Alta
                     </span>
                   </div>
@@ -90,33 +93,20 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-4 -left-4 rotate-[-4deg] rounded-2xl border border-ink-100 bg-surface px-3 py-2 shadow-soft">
-              <span className="text-sm font-bold text-brand-700 dark:text-brand-400">+2 completadas hoy</span>
+            <div className="absolute -bottom-4 left-2 rotate-[-4deg] rounded-2xl border border-ink-100 bg-surface px-3 py-2 shadow-soft sm:-left-4 dark:border-ink-200 dark:shadow-[0_10px_24px_-10px_rgba(0,0,0,0.7)]">
+              <span className="text-sm font-bold text-brand-700 dark:text-brand-400">+1 completada hoy</span>
             </div>
           </div>
         </div>
       </AuroraBackground>
 
-      {/* Stats */}
-      <section className="mx-auto max-w-6xl px-6 pb-4">
-        <div className="grid grid-cols-2 gap-5 border-y border-ink-100 py-8 sm:grid-cols-4">
-          {STATS.map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="font-display text-3xl font-extrabold text-brand-600 sm:text-4xl">{s.value}</p>
-              <p className="mt-1 text-sm text-ink-500">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="mx-auto max-w-xl text-center">
           <h2 className="font-display text-3xl font-bold text-balance sm:text-4xl">Todo lo que necesitas</h2>
           <p className="mt-3 text-ink-500">Sin curva de aprendizaje, sin ruido: solo lo esencial para avanzar.</p>
         </div>
 
-        <div className="mt-10 grid gap-5 sm:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-3 animate-fade-up timeline-view animate-range-entry">
           {FEATURES.map((f) => (
             <div
               key={f.title}
@@ -134,55 +124,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials teaser */}
-      <section className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-display text-3xl font-bold text-balance sm:text-4xl">Lo que dice la comunidad</h2>
-            <p className="mt-3 text-ink-500">Personas reales, organizando su día con TaskFlow.</p>
-          </div>
-          <Link
-            href="/comments"
-            className="hidden shrink-0 whitespace-nowrap text-sm font-semibold text-brand-700 dark:text-brand-400 hover:underline sm:block"
-          >
-            Ver todos los comentarios →
-          </Link>
-        </div>
-
-        <div className="mt-10 grid gap-5 sm:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="rounded-3xl border border-ink-100 bg-surface p-6 shadow-soft">
-              <div className="flex gap-0.5 text-warm-500">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <svg key={i} className="size-4 fill-current" viewBox="0 0 20 20">
-                    <path d="M10 1.5 12.6 7l6 .9-4.3 4.2 1 6-5.3-2.8-5.3 2.8 1-6L1.4 7.9l6-.9Z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="mt-4 text-sm text-ink-600">“{t.quote}”</p>
-              <div className="mt-5 flex items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-100 font-display font-bold text-brand-700">
-                  {t.name.charAt(0)}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{t.name}</p>
-                  <p className="truncate text-xs text-ink-400">{t.role}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Link
-          href="/comments"
-          className="mt-8 block text-center text-sm font-semibold text-brand-700 dark:text-brand-400 hover:underline sm:hidden"
-        >
-          Ver todos los comentarios →
-        </Link>
-      </section>
-
       <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="relative overflow-hidden rounded-4xl bg-night px-6 py-16 text-center">
+        <div className="relative overflow-hidden rounded-4xl bg-night px-6 py-16 text-center animate-fade-up timeline-view animate-range-entry">
           <div className="absolute -top-16 -right-10 size-72 rounded-full bg-brand-500/30 blur-3xl" />
           <h2 className="relative font-display text-3xl font-bold text-balance text-white sm:text-4xl">
             Empieza a avanzar hoy
@@ -201,31 +144,6 @@ export default function Home() {
     </main>
   );
 }
-
-const STATS = [
-  { value: "10k+", label: "Tareas completadas" },
-  { value: "2.5k", label: "Personas activas" },
-  { value: "4.8/5", label: "Valoración media" },
-  { value: "< 1 min", label: "Para empezar" },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Marcela Ruiz",
-    role: "Diseñadora freelance",
-    quote: "Dejé de perder tareas en notas sueltas. Ahora todo vive en un solo lugar y lo reviso en segundos.",
-  },
-  {
-    name: "Diego Fernández",
-    role: "Product Manager",
-    quote: "La priorización es justo lo que necesitaba: ver lo urgente sin ahogarme en listas interminables.",
-  },
-  {
-    name: "Camila Torres",
-    role: "Estudiante de posgrado",
-    quote: "Simple de usar desde el primer día. Lo recomiendo a todo el que me dice que anda desorganizado.",
-  },
-];
 
 const FEATURES = [
   {
