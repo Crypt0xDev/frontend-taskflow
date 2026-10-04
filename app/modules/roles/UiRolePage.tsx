@@ -32,7 +32,7 @@ export default function UiRolePage() {
   const { roles, loading, error, reload, remove } = useRoleList();
   const { permissions } = usePermissionList();
   const { hasPermission } = useSession();
-  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Role>();
+  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection(roles);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Role | null>(null);

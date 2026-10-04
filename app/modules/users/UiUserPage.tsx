@@ -40,7 +40,7 @@ export default function UiUserPage() {
   const [resetting, setResetting] = useState<User | null>(null);
   const [editing, setEditing] = useState<User | null>(null);
   const [creating, setCreating] = useState(false);
-  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<User>();
+  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection(users);
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | string>("all");
   const [page, setPage] = useState(1);
