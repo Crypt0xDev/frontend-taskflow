@@ -1,22 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { LogOut, UserCircle, UserCog } from "lucide-react";
 
-import { useSidebar } from "@/components/ui/sidebar";
-import { useNavItems } from "@/hooks/useNavItems";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { isActivePath, useNavSections } from "@/hooks/useNavItems";
+import { useSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
-const MAX_ITEMS = 4;
+const tabClass = (active: boolean) =>
+  cn(
+    "flex flex-1 flex-col items-center gap-1 py-2 text-xs",
+    active ? "text-brand-700 dark:text-brand-400" : "text-ink-500",
+  );
 
 export function UiBottomNav() {
   const pathname = usePathname();
-  const navItems = useNavItems();
-  const { toggleSidebar } = useSidebar();
-
-  const primary = navItems.slice(0, MAX_ITEMS);
-  const hasMore = navItems.length > MAX_ITEMS;
+  const sections = useNavSections();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountActive = isActivePath(pathname, "/profile");
 
   return (
     <nav
@@ -24,34 +29,99 @@ export function UiBottomNav() {
       aria-label="Navegación principal"
     >
       <div className="flex items-stretch justify-around">
-        {primary.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
+        {sections.map((section) => {
+          const active = section.items.some((item) => isActivePath(pathname, item.href));
+          const Icon = section.icon;
           return (
             <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2 text-xs",
-                active ? "text-brand-700 dark:text-brand-400" : "text-ink-500",
-              )}
+              key={section.id}
+              href={section.items[0].href}
+              aria-current={active ? "page" : undefined}
+              className={tabClass(active)}
             >
               <Icon className="size-5" />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{section.label}</span>
             </Link>
           );
         })}
-        {hasMore && (
+        <button
+          type="button"
+          onClick={() => setAccountOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={accountOpen}
+          className={tabClass(accountActive)}
+        >
+          <UserCircle className="size-5" />
+          <span>Cuenta</span>
+        </button>
+      </div>
+
+      <UiAccountSheet open={accountOpen} onOpenChange={setAccountOpen} profileActive={accountActive} />
+    </nav>
+  );
+}
+
+function UiAccountSheet({
+  open,
+  onOpenChange,
+  profileActive,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  profileActive: boolean;
+}) {
+  const { user, isAdmin, logout } = useSession();
+  const router = useRouter();
+  const close = () => onOpenChange(false);
+
+  async function handleLogout() {
+    close();
+    await logout();
+    router.replace("/login");
+  }
+
+  if (!user) return null;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="gap-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+        <SheetHeader className="pb-2">
+          <SheetTitle>Cuenta</SheetTitle>
+        </SheetHeader>
+        <div className="px-2 pb-4">
+          <div className="flex items-center gap-3 px-3 pb-3">
+            <Avatar className="size-9">
+              <AvatarFallback className="bg-brand-100 text-sm font-bold text-brand-700">
+                {user.avatar ?? user.username.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate font-medium">{user.username}</p>
+              <p className="truncate text-xs text-muted-foreground">{isAdmin ? "Administrador" : user.email}</p>
+            </div>
+          </div>
+          <Link
+            href="/profile"
+            onClick={close}
+            aria-current={profileActive ? "page" : undefined}
+            className={cn(
+              "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm active:bg-muted",
+              profileActive && "bg-muted font-medium text-brand-700 dark:text-brand-400",
+            )}
+          >
+            <UserCog className="size-5" />
+            Mi perfil
+          </Link>
           <button
             type="button"
-            onClick={toggleSidebar}
-            className="flex flex-1 flex-col items-center gap-1 py-2 text-xs text-ink-500"
+            onClick={handleLogout}
+            className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-destructive active:bg-muted"
           >
-            <MoreHorizontal className="size-5" />
-            <span>Más</span>
+            <LogOut className="size-5" />
+            Cerrar sesión
           </button>
-        )}
-      </div>
-    </nav>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

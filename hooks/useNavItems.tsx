@@ -1,10 +1,22 @@
 import { useSession } from "@/lib/session";
 
+export type SectionId = "home" | "tasks" | "admin";
+
 export type NavItem = {
   href: string;
   label: string;
   icon: (p: { className?: string }) => React.ReactNode;
   permission?: [module: string, action: string];
+  section: SectionId;
+  tabLabel?: string;
+};
+
+export type NavSection = {
+  id: SectionId;
+  label: string;
+  groupLabel?: string;
+  icon: NavItem["icon"];
+  items: NavItem[];
 };
 
 function GridIcon({ className }: { className?: string }) {
@@ -101,17 +113,34 @@ function UsersIcon({ className }: { className?: string }) {
 }
 
 const NAV_ITEMS_ALL: NavItem[] = [
-  { href: "/dashboard", label: "Resumen", icon: GridIcon },
-  { href: "/tasks", label: "Tareas", icon: CheckCircleIcon, permission: ["tasks", "view"] },
-  { href: "/categories", label: "Categorías", icon: FolderIcon, permission: ["categories", "view"] },
-  { href: "/tags", label: "Etiquetas", icon: TagIcon, permission: ["tags", "view"] },
-  { href: "/calendar", label: "Calendario", icon: CalendarIcon, permission: ["tasks", "view"] },
-  { href: "/admin/users", label: "Usuarios", icon: UsersIcon, permission: ["users", "view"] },
-  { href: "/admin/roles", label: "Roles", icon: ShieldIcon, permission: ["roles", "view"] },
-  { href: "/admin/comments", label: "Comentarios", icon: ChatIcon, permission: ["comments", "view"] },
+  { href: "/dashboard", label: "Resumen", icon: GridIcon, section: "home" },
+  { href: "/tasks", label: "Tareas", tabLabel: "Lista", icon: CheckCircleIcon, permission: ["tasks", "view"], section: "tasks" },
+  { href: "/calendar", label: "Calendario", icon: CalendarIcon, permission: ["tasks", "view"], section: "tasks" },
+  { href: "/categories", label: "Categorías", icon: FolderIcon, permission: ["categories", "view"], section: "tasks" },
+  { href: "/tags", label: "Etiquetas", icon: TagIcon, permission: ["tags", "view"], section: "tasks" },
+  { href: "/admin/users", label: "Usuarios", icon: UsersIcon, permission: ["users", "view"], section: "admin" },
+  { href: "/admin/roles", label: "Roles", icon: ShieldIcon, permission: ["roles", "view"], section: "admin" },
+  { href: "/admin/comments", label: "Comentarios", icon: ChatIcon, permission: ["comments", "view"], section: "admin" },
 ];
+
+const SECTIONS: Omit<NavSection, "items">[] = [
+  { id: "home", label: "Inicio", icon: GridIcon },
+  { id: "tasks", label: "Tareas", groupLabel: "Tareas", icon: CheckCircleIcon },
+  { id: "admin", label: "Admin", groupLabel: "Administración", icon: ShieldIcon },
+];
+
+export function isActivePath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function useNavItems(): NavItem[] {
   const { hasPermission } = useSession();
   return NAV_ITEMS_ALL.filter((item) => !item.permission || hasPermission(...item.permission));
+}
+
+export function useNavSections(): NavSection[] {
+  const items = useNavItems();
+  return SECTIONS.map((section) => ({ ...section, items: items.filter((i) => i.section === section.id) })).filter(
+    (section) => section.items.length > 0,
+  );
 }

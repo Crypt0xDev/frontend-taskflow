@@ -1,8 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, } from "@/components/ui/sheet";
+
+export type ViewSheetActions = {
+  onEdit?: () => void;
+  onDelete?: () => void;
+  deleteDisabled?: boolean;
+  extra?: ReactNode;
+};
 
 type ViewSheetProps = {
   open: boolean;
@@ -11,10 +20,12 @@ type ViewSheetProps = {
   description?: string;
   empty?: ReactNode;
   children?: ReactNode;
-  footer?: ReactNode;
+  actions?: ViewSheetActions;
 };
 
-export function UiViewSheet({ open, onOpenChange, title, description, empty, children, footer }: ViewSheetProps) {
+export function UiViewSheet({ open, onOpenChange, title, description, empty, children, actions }: ViewSheetProps) {
+  const hasActions = Boolean(children && (actions?.onEdit || actions?.onDelete || actions?.extra));
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="overflow-y-auto border-l sm:max-w-md">
@@ -27,7 +38,28 @@ export function UiViewSheet({ open, onOpenChange, title, description, empty, chi
         ) : (
           <p className="px-4 pt-4 text-sm text-muted-foreground">{empty}</p>
         )}
-        {footer && <div className="mt-auto flex gap-2 border-t p-4">{footer}</div>}
+        {hasActions && actions && (
+          <div className="mt-auto flex flex-wrap gap-2 border-t p-4">
+            {actions.extra}
+            {actions.onEdit && (
+              <Button className="flex-1" onClick={actions.onEdit}>
+                <Pencil className="size-4" />
+                Editar
+              </Button>
+            )}
+            {actions.onDelete && (
+              <Button
+                variant="outline"
+                className="flex-1 text-destructive hover:text-destructive"
+                disabled={actions.deleteDisabled}
+                onClick={actions.onDelete}
+              >
+                <Trash2 className="size-4" />
+                Eliminar
+              </Button>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

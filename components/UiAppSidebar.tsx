@@ -6,14 +6,14 @@ import { ListChecks } from "lucide-react";
 
 import { UiNavUser } from "@/components/UiNavUser";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useNavItems, type NavItem } from "@/hooks/useNavItems";
+import { isActivePath, useNavSections, type NavItem } from "@/hooks/useNavItems";
 
 export function UiAppSidebar() {
   const pathname = usePathname();
-  const navItems = useNavItems();
+  const sections = useNavSections();
 
   const renderItem = (item: NavItem) => {
-    const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    const active = isActivePath(pathname, item.href);
     const Icon = item.icon;
     return (
       <SidebarMenuItem key={item.href}>
@@ -37,12 +37,14 @@ export function UiAppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>{navItems.map(renderItem)}</SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {sections.map((section) => (
+          <SidebarGroup key={section.id}>
+            {section.groupLabel && <SidebarGroupLabel>{section.groupLabel}</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>{section.items.map(renderItem)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter>

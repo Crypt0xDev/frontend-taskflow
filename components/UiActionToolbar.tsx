@@ -16,7 +16,6 @@ type Props = {
   deleteDisabled?: boolean;
   start?: ReactNode;
   end?: ReactNode;
-  /** Oculta Visualizar/Editar/Eliminar en móvil cuando la fila se abre al tocarla. */
   hideSelectionActionsOnMobile?: boolean;
 };
 
@@ -33,9 +32,10 @@ export function UiActionToolbar({
   hideSelectionActionsOnMobile = false,
 }: Props) {
   const selectionAction = hideSelectionActionsOnMobile ? "hidden sm:inline-flex" : undefined;
+  const emptyOnMobile = hideSelectionActionsOnMobile && !start && !onCreate && !end;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className={cn("flex flex-wrap items-center gap-2", emptyOnMobile && "hidden sm:flex")}>
       {onView && (
         <Button
           variant="outline"
