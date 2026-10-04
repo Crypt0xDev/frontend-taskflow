@@ -21,7 +21,6 @@ import { UiTaskStatusBadge } from "@/app/modules/tasks/ui/UiTaskStatusBadge";
 import { UiTaskView } from "@/app/modules/tasks/ui/UiTaskView";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-// Iniciales en móvil: "X" para miércoles evita la doble "M".
 const WEEKDAY_INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
 const MONTHS = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -61,7 +60,6 @@ export default function UiCalendarPage() {
   const today = new Date();
   const todayKey = ymd(today);
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  // Móvil: día cuyas tareas se listan bajo la cuadrícula.
   const [selectedKey, setSelectedKey] = useState(todayKey);
   const [viewing, setViewing] = useState<Task | null>(null);
   const [editing, setEditing] = useState<Task | null>(null);

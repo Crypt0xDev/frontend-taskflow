@@ -41,7 +41,7 @@ export default function UiTaskPage() {
   const canUpdate = hasPermission("tasks", "update");
   const canDelete = hasPermission("tasks", "delete");
 
-  // `/tasks?new=1` (desde el dashboard) abre el formulario de creación.
+  //
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -51,7 +51,7 @@ export default function UiTaskPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [viewing, setViewing] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
-  const { selected, hasSelection, toggle: toggleSelect, clear: clearSelect } = useRowSelection<Task>();
+  const { selected, hasSelection, toggle: toggleSelect, clear: clearSelect } = useRowSelection(tasks);
   const [trashOpen, setTrashOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | TaskStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | TaskPriority>("all");
@@ -59,7 +59,7 @@ export default function UiTaskPage() {
   const [page, setPage] = useState(1);
   const [tableRef, pageSize] = useResponsivePageSize<HTMLDivElement>();
 
-  // Limpia ?new=1 para que recargar la página no vuelva a abrir el formulario.
+  // Limpia
   useEffect(() => {
     if (wantsNew) router.replace(pathname);
   }, [wantsNew, router, pathname]);

@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default function TasksRoute() {
-  // Suspense: UiTaskPage lee ?new=1 con useSearchParams.
   return (
     <Suspense>
       <UiTaskPage />
