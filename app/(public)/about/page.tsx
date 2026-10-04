@@ -77,7 +77,7 @@ export default function AboutPage() {
         <div className="mt-8 grid gap-8 sm:grid-cols-3">
           {STEPS.map((s, i) => (
             <div key={s.title} className="relative">
-              <span className="font-display text-4xl font-extrabold text-brand-100">0{i + 1}</span>
+              <span aria-hidden="true" className="font-display text-4xl font-extrabold text-brand-100">0{i + 1}</span>
               <h3 className="mt-2 font-display text-lg font-bold">{s.title}</h3>
               <p className="mt-1 text-sm text-ink-500">{s.desc}</p>
             </div>
@@ -88,7 +88,7 @@ export default function AboutPage() {
       <div className="mt-14 flex flex-wrap items-center gap-3">
         <Link
           href="/register"
-          className="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-600"
+          className="rounded-full bg-brand-700 px-6 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-800"
         >
           Crear mi cuenta
         </Link>

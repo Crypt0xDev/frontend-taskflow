@@ -42,7 +42,7 @@ export default function Home() {
             <div className="animate-fade-up mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: ".24s" }}>
               <Link
                 href="/register"
-                className="rounded-full bg-brand-500 px-6 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-600"
+                className="rounded-full bg-brand-700 px-6 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-800"
               >
                 Empezar gratis
               </Link>
@@ -71,7 +71,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 rounded-2xl border-l-4 border-warm-500 bg-ink-50 p-3">
                     <span className="size-5 shrink-0 rounded-full border-2 border-warm-500" />
                     <span className="text-sm font-medium">Enviar propuesta al cliente</span>
-                    <span className="ml-auto rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-bold text-warm-600">
+                    <span className="ml-auto rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-bold text-warm-700">
                       Alta
                     </span>
                   </div>
@@ -91,7 +91,7 @@ export default function Home() {
               </div>
             </div>
             <div className="absolute -bottom-4 -left-4 rotate-[-4deg] rounded-2xl border border-ink-100 bg-surface px-3 py-2 shadow-soft">
-              <span className="text-sm font-bold text-brand-600">+2 completadas hoy</span>
+              <span className="text-sm font-bold text-brand-700 dark:text-brand-400">+2 completadas hoy</span>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function Home() {
           </div>
           <Link
             href="/comments"
-            className="hidden shrink-0 whitespace-nowrap text-sm font-semibold text-brand-600 hover:underline sm:block"
+            className="hidden shrink-0 whitespace-nowrap text-sm font-semibold text-brand-700 dark:text-brand-400 hover:underline sm:block"
           >
             Ver todos los comentarios →
           </Link>
@@ -175,7 +175,7 @@ export default function Home() {
 
         <Link
           href="/comments"
-          className="mt-8 block text-center text-sm font-semibold text-brand-600 hover:underline sm:hidden"
+          className="mt-8 block text-center text-sm font-semibold text-brand-700 dark:text-brand-400 hover:underline sm:hidden"
         >
           Ver todos los comentarios →
         </Link>
@@ -192,7 +192,7 @@ export default function Home() {
           </p>
           <Link
             href="/register"
-            className="relative mt-8 inline-block rounded-full bg-brand-500 px-8 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-400"
+            className="relative mt-8 inline-block rounded-full bg-brand-700 px-8 py-3 font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-400"
           >
             Crear mi cuenta
           </Link>
