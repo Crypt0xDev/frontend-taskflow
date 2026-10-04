@@ -112,14 +112,14 @@ export default function UiCategoryPage() {
           placeholder="Buscar por nombre…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="max-w-xs"
+          className="min-w-0 flex-1 sm:max-w-xs"
         />
         <Select
           items={{ all: "Todas", used: "Con tareas", unused: "Sin tareas" }}
           value={usage}
           onValueChange={(v) => setUsage(v as "all" | "used" | "unused")}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger aria-label="Filtrar por uso" className="w-32 shrink-0 sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -148,48 +148,83 @@ export default function UiCategoryPage() {
           </p>
         </div>
       ) : (
-        <div className="animate-fade-up rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Tareas</TableHead>
-                <TableHead>Creada</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((category) => {
-                const count = category.tasks_count ?? 0;
-                return (
-                  <UiSelectableRow
-                    key={category.id}
-                    selected={isSelected(category)}
-                    onSelect={() => toggle(category)}
-                  >
-                    <TableCell className="font-medium">
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="size-3 shrink-0 rounded-full border"
-                          style={{ backgroundColor: category.color ?? "transparent" }}
-                        />
-                        {category.name}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-xs text-muted-foreground">
-                      <span className="line-clamp-1">{category.description ?? "—"}</span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {count} {count === 1 ? "tarea" : "tareas"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDateTime(category.created_at)}
-                    </TableCell>
-                  </UiSelectableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+        <div className="animate-fade-up space-y-2 sm:space-y-0">
+          {/* Móvil: tarjetas apiladas, sin scroll lateral */}
+          <div className="space-y-2 sm:hidden">
+            {filtered.map((category) => {
+              const count = category.tasks_count ?? 0;
+              return (
+                <div
+                  key={category.id}
+                  onClick={() => toggle(category)}
+                  data-state={isSelected(category) ? "selected" : undefined}
+                  className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="size-3 shrink-0 rounded-full border"
+                      style={{ backgroundColor: category.color ?? "transparent" }}
+                    />
+                    <span className="min-w-0 flex-1 truncate font-medium">{category.name}</span>
+                  </div>
+                  {category.description && (
+                    <p className="mt-1 line-clamp-1 pl-5 text-sm text-muted-foreground">
+                      {category.description}
+                    </p>
+                  )}
+                  <div className="mt-2 flex items-center justify-between pl-5 text-xs text-muted-foreground">
+                    <span>{count} {count === 1 ? "tarea" : "tareas"}</span>
+                    <span>{formatDateTime(category.created_at)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tablet y superior: tabla */}
+          <div className="hidden rounded-md border sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead className="hidden sm:table-cell">Descripción</TableHead>
+                  <TableHead>Tareas</TableHead>
+                  <TableHead className="hidden md:table-cell">Creada</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((category) => {
+                  const count = category.tasks_count ?? 0;
+                  return (
+                    <UiSelectableRow
+                      key={category.id}
+                      selected={isSelected(category)}
+                      onSelect={() => toggle(category)}
+                    >
+                      <TableCell className="font-medium">
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="size-3 shrink-0 rounded-full border"
+                            style={{ backgroundColor: category.color ?? "transparent" }}
+                          />
+                          <span>{category.name}</span>
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden max-w-xs text-muted-foreground sm:table-cell">
+                        <span className="line-clamp-1">{category.description ?? "—"}</span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {count} {count === 1 ? "tarea" : "tareas"}
+                      </TableCell>
+                      <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
+                        {formatDateTime(category.created_at)}
+                      </TableCell>
+                    </UiSelectableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
