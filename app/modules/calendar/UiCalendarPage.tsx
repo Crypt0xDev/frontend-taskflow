@@ -80,68 +80,123 @@ export default function UiCalendarPage() {
       {loading ? (
         <Skeleton className="h-96 rounded-md" />
       ) : (
-        <div className="animate-fade-up overflow-x-auto rounded-md border">
-          <div className="min-w-160">
-            <div className="grid grid-cols-7 border-b bg-muted/40 text-center text-xs font-medium text-muted-foreground">
-              {WEEKDAYS.map((d) => (
-                <div key={d} className="py-2">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {cells.map((date, i) => {
-                const key = date ? ymd(date) : `empty-${i}`;
-                const dayTasks = date ? byDay[key] ?? [] : [];
-                const isToday = date && key === todayKey;
+        <>
+          {/* Móvil: agenda apilada por día, sin scroll lateral */}
+          <div className="animate-fade-up space-y-3 sm:hidden">
+            {cells
+              .filter((date): date is Date => date !== null)
+              .map((date) => {
+                const key = ymd(date);
+                const dayTasks = byDay[key] ?? [];
+                const isToday = key === todayKey;
+                if (dayTasks.length === 0 && !isToday) return null;
                 return (
-                  <div
-                    key={key}
-                    className={cn(
-                      "min-h-24 border-b border-r p-1.5 nth-[7n]:border-r-0",
-                      !date && "bg-muted/20",
-                    )}
-                  >
-                    {date && (
-                      <>
-                        <div
-                          className={cn(
-                            "mb-1 text-xs",
-                            isToday
-                              ? "inline-grid size-5 place-items-center rounded-full bg-brand-500 font-bold text-white"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          {date.getDate()}
-                        </div>
-                        <div className="space-y-1">
-                          {dayTasks.slice(0, 3).map((t) => (
-                            <div
-                              key={t.id}
-                              title={`${t.title} · ${PRIORITY_LABELS[t.priority]}`}
-                              className={cn(
-                                "flex items-center gap-1 truncate rounded px-1 py-0.5 text-xs",
-                                t.status === "completed"
-                                  ? "text-muted-foreground line-through"
-                                  : "bg-muted",
-                              )}
-                            >
-                              <span className={cn("size-1.5 shrink-0 rounded-full", DOT[t.priority])} />
-                              <span className="truncate">{t.title}</span>
-                            </div>
-                          ))}
-                          {dayTasks.length > 3 && (
-                            <div className="px-1 text-[11px] text-muted-foreground">
-                              +{dayTasks.length - 3} más
-                            </div>
-                          )}
-                        </div>
-                      </>
+                  <div key={key} className="rounded-md border p-3">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "inline-grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold",
+                          isToday ? "bg-brand-700 text-white" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {date.getDate()}
+                      </span>
+                      <span className="text-sm font-medium capitalize">
+                        {WEEKDAYS[(date.getDay() + 6) % 7]} · {MONTHS[date.getMonth()]}
+                      </span>
+                    </div>
+                    {dayTasks.length === 0 ? (
+                      <p className="pl-8 text-xs text-muted-foreground">Sin tareas</p>
+                    ) : (
+                      <div className="space-y-1.5 pl-8">
+                        {dayTasks.map((t) => (
+                          <div
+                            key={t.id}
+                            className={cn(
+                              "flex items-center gap-1.5 text-sm",
+                              t.status === "completed" && "text-muted-foreground line-through",
+                            )}
+                          >
+                            <span className={cn("size-1.5 shrink-0 rounded-full", DOT[t.priority])} />
+                            <span className="truncate">{t.title}</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
               })}
+            {cells.every((date) => !date || (byDay[ymd(date)] ?? []).length === 0) && (
+              <div className="rounded-md border p-10 text-center">
+                <p className="font-medium">No hay tareas este mes</p>
+              </div>
+            )}
+          </div>
+
+          {/* Tablet y superior: cuadrícula mensual */}
+          <div className="hidden animate-fade-up overflow-x-auto rounded-md border sm:block">
+            <div className="min-w-160">
+              <div className="grid grid-cols-7 border-b bg-muted/40 text-center text-xs font-medium text-muted-foreground">
+                {WEEKDAYS.map((d) => (
+                  <div key={d} className="py-2">{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {cells.map((date, i) => {
+                  const key = date ? ymd(date) : `empty-${i}`;
+                  const dayTasks = date ? byDay[key] ?? [] : [];
+                  const isToday = date && key === todayKey;
+                  return (
+                    <div
+                      key={key}
+                      className={cn(
+                        "min-h-24 border-b border-r p-1.5 nth-[7n]:border-r-0",
+                        !date && "bg-muted/20",
+                      )}
+                    >
+                      {date && (
+                        <>
+                          <div
+                            className={cn(
+                              "mb-1 text-xs",
+                              isToday
+                                ? "inline-grid size-5 place-items-center rounded-full bg-brand-700 font-bold text-white"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {date.getDate()}
+                          </div>
+                          <div className="space-y-1">
+                            {dayTasks.slice(0, 3).map((t) => (
+                              <div
+                                key={t.id}
+                                title={`${t.title} · ${PRIORITY_LABELS[t.priority]}`}
+                                className={cn(
+                                  "flex items-center gap-1 truncate rounded px-1 py-0.5 text-xs",
+                                  t.status === "completed"
+                                    ? "text-muted-foreground line-through"
+                                    : "bg-muted",
+                                )}
+                              >
+                                <span className={cn("size-1.5 shrink-0 rounded-full", DOT[t.priority])} />
+                                <span className="truncate">{t.title}</span>
+                              </div>
+                            ))}
+                            {dayTasks.length > 3 && (
+                              <div className="px-1 text-[11px] text-muted-foreground">
+                                +{dayTasks.length - 3} más
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
