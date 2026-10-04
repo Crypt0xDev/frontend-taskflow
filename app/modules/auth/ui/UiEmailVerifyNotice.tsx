@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ApiError } from "@/lib/api";
 import { useSession } from "@/lib/session";
 
-export function UiVerifyEmailNotice() {
+export function UiEmailVerifyNotice() {
   const { user, logout, resendVerificationEmail } = useSession();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);

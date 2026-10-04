@@ -8,6 +8,7 @@ export type Credentials = {
 export type RegisterInput = Credentials & {
   user_name: string;
   password_confirmation: string;
+  privacy_accepted: boolean;
 };
 
 export type AuthResponse = {

@@ -1,17 +1,17 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 
-import { UiModeToggle } from "@/components/UiModeToggle";
 import { UiLoadingSpinner } from "@/components/UiLoading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiFetch } from "@/lib/api";
 import { useSession } from "@/lib/session";
-import type { User } from "@/lib/session";
 
-const COPY: Record<string, { title: string; description: string }> = {
+import { useAuthEmailVerify, type VerificationStatus } from "./hooks";
+import { UiAuthShell } from "./ui/UiAuthShell";
+
+const COPY: Record<VerificationStatus, { title: string; description: string }> = {
   verified: {
     title: "¡Correo verificado!",
     description: "Tu cuenta ya está activa. Puedes continuar usando TaskFlow.",
@@ -26,7 +26,11 @@ const COPY: Record<string, { title: string; description: string }> = {
   },
 };
 
-export default function VerifyEmailPage() {
+function toStatus(value: string | null): VerificationStatus {
+  return value === "verified" || value === "already-verified" ? value : "invalid";
+}
+
+export default function UiEmailPage() {
   return (
     <Suspense
       fallback={
@@ -35,31 +39,20 @@ export default function VerifyEmailPage() {
         </div>
       }
     >
-      <VerifyEmailContent />
+      <EmailContent />
     </Suspense>
   );
 }
 
-// `useSearchParams` obliga a envolver en Suspense para no bloquear el
-// prerender estático del resto de la página (ver Next.js docs).
-function VerifyEmailContent() {
+function EmailContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user, updateUser } = useSession();
-  const status = searchParams.get("status") ?? "invalid";
-  const copy = COPY[status] ?? COPY.invalid;
-  const [refreshed, setRefreshed] = useState(false);
-
-  useEffect(() => {
-    if (status !== "verified" && status !== "already-verified") return;
-    apiFetch<User>("/me")
-      .then((me) => updateUser({ email_verified: me.email_verified }))
-      .finally(() => setRefreshed(true));
-  }, [status, updateUser]);
+  const { user } = useSession();
+  const status = toStatus(useSearchParams().get("status"));
+  const { ready } = useAuthEmailVerify(status);
+  const copy = COPY[status];
 
   return (
-    <main className="relative flex flex-1 flex-col items-center justify-center gap-8 p-4">
-      <UiModeToggle className="absolute right-4 top-4" />
+    <UiAuthShell brand={false}>
       <Card className="w-full max-w-sm text-center">
         <CardHeader>
           <CardTitle className="text-2xl">{copy.title}</CardTitle>
@@ -67,12 +60,7 @@ function VerifyEmailContent() {
         </CardHeader>
         <CardContent>
           {user ? (
-            <Button
-              type="button"
-              className="w-full"
-              disabled={(status === "verified" || status === "already-verified") && !refreshed}
-              onClick={() => router.replace("/dashboard")}
-            >
+            <Button type="button" className="w-full" disabled={!ready} onClick={() => router.replace("/dashboard")}>
               Ir a mi panel
             </Button>
           ) : (
@@ -82,6 +70,6 @@ function VerifyEmailContent() {
           )}
         </CardContent>
       </Card>
-    </main>
+    </UiAuthShell>
   );
 }

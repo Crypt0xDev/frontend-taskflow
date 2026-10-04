@@ -1,3 +1,5 @@
+export * from "./serviceAuthForgotPassword";
 export * from "./serviceAuthLogin";
-export * from "./serviceAuthPasswordReset";
+export * from "./serviceAuthMe";
 export * from "./serviceAuthRegister";
+export * from "./serviceAuthResetPassword";
