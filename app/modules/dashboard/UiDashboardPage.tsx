@@ -333,7 +333,6 @@ function StatTile({
   hint?: string;
   tone?: "warn";
 }) {
-  // Solo se resalta lo que requiere acción (p. ej. tareas vencidas).
   const warnActive = tone === "warn" && value > 0;
 
   return (
