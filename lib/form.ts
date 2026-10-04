@@ -1,4 +1,7 @@
+import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import type { ZodError } from "zod";
+
+import { ApiError } from "@/lib/api";
 
 export function zodFieldErrors(error: ZodError): Record<string, string> {
   const out: Record<string, string> = {};
@@ -15,4 +18,12 @@ export function apiFieldErrors(errors: Record<string, string[]>): Record<string,
     if (messages?.length) out[key] = messages[0];
   }
   return out;
+}
+
+export function setFormApiErrors<T extends FieldValues>(form: UseFormReturn<T>, error: unknown): boolean {
+  if (!(error instanceof ApiError) || !error.errors) return false;
+  for (const [name, message] of Object.entries(apiFieldErrors(error.errors))) {
+    form.setError(name as Path<T>, { message });
+  }
+  return true;
 }

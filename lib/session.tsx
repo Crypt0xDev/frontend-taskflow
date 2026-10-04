@@ -43,8 +43,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
-  // Solo un 401 invalida la sesión; un 429/500 o un corte de red no deben
-  // cerrar la sesión del usuario, solo permitir reintentar.
   const loadUser = useCallback(() => {
     const token = getToken();
     if (!token) {
@@ -131,7 +129,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 export function useSession(): SessionValue {
   const ctx = useContext(SessionContext);
   if (!ctx) {
-    throw new Error("useSession must be used within a SessionProvider");
+    throw new Error("useSession debe usarse dentro de un <SessionProvider>.");
   }
   return ctx;
 }

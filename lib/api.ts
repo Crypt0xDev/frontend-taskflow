@@ -1,4 +1,4 @@
-import { API_URL, REQUEST_TIMEOUT_MS, SESSION_FLAG_COOKIE, TOKEN_KEY } from '@/config/constants';
+import { API_URL, REQUEST_TIMEOUT_MS, SESSION_FLAG_COOKIE, SESSION_MAX_AGE_MINUTES, TOKEN_KEY } from '@/config/constants';
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -12,9 +12,7 @@ export function getToken(): string | null {
 export function setToken(token: string): void {
   try {
     localStorage.setItem(TOKEN_KEY, token);
-    // Cookie liviana (sin el token) para que middleware.ts pueda proteger
-    // rutas en el servidor y evitar el parpadeo de páginas protegidas.
-    document.cookie = `${SESSION_FLAG_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+    document.cookie = `${SESSION_FLAG_COOKIE}=1; path=/; max-age=${SESSION_MAX_AGE_MINUTES * 60}; samesite=lax`;
   } catch {}
 }
 
@@ -119,19 +117,23 @@ type PaginatedResponse<T> = {
   meta?: { current_page: number; last_page: number };
 };
 
+const PAGE_CONCURRENCY = 4;
+
 export async function apiFetchAllPages<T>(path: string, options: ApiOptions = {}): Promise<T[]> {
   const sep = path.includes('?') ? '&' : '?';
   const first = await apiFetch<T[] | PaginatedResponse<T>>(`${path}${sep}per_page=100`, options);
 
   if (Array.isArray(first)) return first;
 
-  const results = [...first.data];
   const lastPage = first.meta?.last_page ?? 1;
+  const pages: T[][] = [first.data];
 
-  for (let page = 2; page <= lastPage; page++) {
-    const next = await apiFetch<PaginatedResponse<T>>(`${path}${sep}per_page=100&page=${page}`, options);
-    results.push(...next.data);
+  for (let start = 2; start <= lastPage; start += PAGE_CONCURRENCY) {
+    const batch = Array.from({ length: Math.min(PAGE_CONCURRENCY, lastPage - start + 1) }, (_, i) =>
+      apiFetch<PaginatedResponse<T>>(`${path}${sep}per_page=100&page=${start + i}`, options),
+    );
+    for (const page of await Promise.all(batch)) pages.push(page.data);
   }
 
-  return results;
+  return pages.flat();
 }
