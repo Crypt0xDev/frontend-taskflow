@@ -31,7 +31,7 @@ import { UiTagView } from "./ui/UiTagView";
 
 export default function UiTagPage() {
   const { tags, loading, error, reload, remove } = useTagList();
-  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Tag>();
+  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection(tags);
   const { hasPermission } = useSession();
   const canCreate = hasPermission("tags", "create");
   const canUpdate = hasPermission("tags", "update");

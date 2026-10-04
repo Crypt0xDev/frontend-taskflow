@@ -25,7 +25,7 @@ export default function UiCommentModerationPage() {
   const canDelete = hasPermission("comments", "delete");
   const [deleting, setDeleting] = useState<Comment | null>(null);
   const [viewing, setViewing] = useState<Comment | null>(null);
-  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Comment>();
+  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection(comments);
 
   return (
     <div className="space-y-4">

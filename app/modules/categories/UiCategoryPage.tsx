@@ -44,7 +44,7 @@ export default function UiCategoryPage() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [viewing, setViewing] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
-  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Category>();
+  const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection(categories);
   const [query, setQuery] = useState("");
   const [usage, setUsage] = useState<"all" | "used" | "unused">("all");
   const [trashOpen, setTrashOpen] = useState(false);
