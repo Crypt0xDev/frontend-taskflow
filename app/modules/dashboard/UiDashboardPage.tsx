@@ -14,7 +14,7 @@ import { formatDateTime } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { STATUS_LABELS, type TaskStatus } from "@/app/modules/tasks/type";
 
-import { useAdminOverview, useDashboardSummary } from "./hooks";
+import { useDashboardAdmin, useDashboardSummary } from "./hooks";
 
 const STATUS_BAR: Record<TaskStatus, string> = {
   pending: "bg-amber-500",
@@ -39,7 +39,7 @@ export default function DashboardView() {
     loading: adminLoading,
     canViewUsers,
     canViewComments,
-  } = useAdminOverview();
+  } = useDashboardAdmin();
 
   const byStatus: Record<TaskStatus, number> | null = stats && {
     pending: stats.pending,
@@ -81,8 +81,7 @@ export default function DashboardView() {
         ) : (
           <>
             <BentoGrid
-              className="animate-fade-up max-w-none auto-rows-auto grid-cols-2 gap-3 md:auto-rows-auto md:grid-cols-3 lg:grid-cols-6"
-              style={{ animationDelay: ".05s" }}
+              className="animate-fade-up max-w-none auto-rows-auto grid-cols-2 gap-3 md:auto-rows-auto md:grid-cols-3 lg:grid-cols-6 animate-delay-50"
             >
               <StatTile
                 icon={ListTodo}
@@ -120,7 +119,7 @@ export default function DashboardView() {
               )}
             </BentoGrid>
 
-            <div className="grid animate-fade-up gap-4 lg:grid-cols-2" style={{ animationDelay: ".1s" }}>
+            <div className="grid animate-fade-up gap-4 lg:grid-cols-2 animate-delay-100">
               <Card>
                 <CardHeader>
                   <CardTitle className="font-display">Progreso</CardTitle>
@@ -221,10 +220,10 @@ export default function DashboardView() {
         ) : (
           <>
             {(usersOverview || commentsOverview) && (
-              <div className="grid animate-fade-up gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid animate-fade-up grid-cols-2 gap-3 lg:grid-cols-4">
                 {usersOverview && (
                   <>
-                    <Kpi label="Usuarios" value={usersOverview.totals.users} hint="Cuentas totales" accent />
+                    <Kpi label="Usuarios" value={usersOverview.totals.users} hint="Cuentas totales" />
                     <Kpi label="Administradores" value={usersOverview.totals.admins} hint="Con acceso admin" />
                     <Kpi label="Usuarios normales" value={usersOverview.totals.users_normal} hint="Cuentas estándar" />
                   </>
@@ -309,25 +308,13 @@ export default function DashboardView() {
   );
 }
 
-function Kpi({
-  label,
-  value,
-  hint,
-  accent = false,
-}: {
-  label: string;
-  value: number;
-  hint?: string;
-  accent?: boolean;
-}) {
+function Kpi({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
-    <Card className={accent ? "bg-brand-700 text-white ring-0 shadow-brand" : undefined}>
-      <CardContent className="pt-2">
-        <p className={accent ? "text-sm text-brand-100" : "text-sm text-muted-foreground"}>{label}</p>
+    <Card size="sm">
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{label}</p>
         <p className="font-display text-3xl font-extrabold leading-tight">{value}</p>
-        {hint && (
-          <p className={accent ? "text-xs text-brand-100" : "text-xs text-muted-foreground"}>{hint}</p>
-        )}
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </CardContent>
     </Card>
   );

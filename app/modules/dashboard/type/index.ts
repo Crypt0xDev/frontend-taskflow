@@ -1,2 +1,2 @@
 export * from "./typeDashboardStats";
-export * from "./typeAdminOverview";
+export * from "./typeDashboardAdmin";

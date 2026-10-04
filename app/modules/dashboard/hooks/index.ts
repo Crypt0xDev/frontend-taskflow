@@ -1,2 +1,2 @@
 export * from "./useDashboardSummary";
-export * from "./useAdminOverview";
+export * from "./useDashboardAdmin";

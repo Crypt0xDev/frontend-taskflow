@@ -8,9 +8,9 @@ import { serviceUserList } from "@/app/modules/users/services";
 import { ApiError } from "@/lib/api";
 import { useSession } from "@/lib/session";
 
-import type { UsersOverview, CommentsOverview } from "../type/typeAdminOverview";
+import type { UsersOverview, CommentsOverview } from "../type/typeDashboardAdmin";
 
-export function useAdminOverview() {
+export function useDashboardAdmin() {
   const { hasPermission } = useSession();
   const canViewUsers = hasPermission("users", "view");
   const canViewComments = hasPermission("comments", "view");
