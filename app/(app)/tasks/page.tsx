@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import TasksView from "@/app/modules/tasks/UiTaskPage";
 
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function TasksRoute() {
-  return <TasksView />;
+  // Suspense: TasksView lee ?new=1 con useSearchParams.
+  return (
+    <Suspense>
+      <TasksView />
+    </Suspense>
+  );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Trash } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { SlidersHorizontal, Trash } from "lucide-react";
 
 //
 import { UiActionToolbar } from "@/components/UiActionToolbar";
@@ -11,9 +12,9 @@ import { UiHeaderModule } from "@/components/UiHeaderModule";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { UiPaginationControl } from "@/components/UiPaginationControl";
 import { useCategoryOptions } from "@/app/modules/categories/hooks";
-import { PAGE_SIZE } from "@/config/constants";
+import { useResponsivePageSize } from "@/hooks/useResponsivePageSize";
 import { useSession } from "@/lib/session";
 
 // Tipado
@@ -39,7 +40,13 @@ export default function UiTaskPage() {
   const canUpdate = hasPermission("tasks", "update");
   const canDelete = hasPermission("tasks", "delete");
 
-  const [formOpen, setFormOpen] = useState(false);
+  // `/tasks?new=1` (desde el dashboard) abre el formulario de creación.
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const wantsNew = canCreate && searchParams.get("new") === "1";
+  const [formOpen, setFormOpen] = useState(wantsNew);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [viewing, setViewing] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
@@ -49,6 +56,14 @@ export default function UiTaskPage() {
   const [priorityFilter, setPriorityFilter] = useState<"all" | TaskPriority>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [tableRef, pageSize] = useResponsivePageSize<HTMLDivElement>();
+
+  // Limpia ?new=1 para que recargar la página no vuelva a abrir el formulario.
+  useEffect(() => {
+    if (wantsNew) router.replace(pathname);
+  }, [wantsNew, router, pathname]);
+
+  const activeFilters = [statusFilter, priorityFilter, categoryFilter].filter((f) => f !== "all").length;
 
   const filtered = tasks.filter(
     (t) =>
@@ -57,9 +72,9 @@ export default function UiTaskPage() {
       (categoryFilter === "all" || String(t.category_id) === categoryFilter),
   );
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, pageCount);
-  const paged = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+  const paged = filtered.slice((current - 1) * pageSize, current * pageSize);
 
   const statusItems = useMemo(
     () => ({
@@ -89,6 +104,7 @@ export default function UiTaskPage() {
   }
 
   function openEdit(task: Task) {
+    setViewing(null);
     setEditing(task);
     setFormOpen(true);
   }
@@ -112,6 +128,7 @@ export default function UiTaskPage() {
         onEdit={canUpdate ? () => selected && openEdit(selected) : undefined}
         onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
         onCreate={canCreate ? openCreate : undefined}
+        hideSelectionActionsOnMobile
         end={
           canDelete ? (
             <Button variant="outline" onClick={() => setTrashOpen(true)}>
@@ -122,19 +139,41 @@ export default function UiTaskPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex gap-2 sm:hidden">
         <Input
           placeholder="Buscar por título…"
+          aria-label="Buscar por título"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="max-w-xs"
+        />
+        <Button
+          variant="outline"
+          aria-expanded={filtersOpen}
+          aria-controls="task-filters"
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          <SlidersHorizontal className="size-4" />
+          Filtros{activeFilters > 0 && ` (${activeFilters})`}
+        </Button>
+      </div>
+
+      <div
+        id="task-filters"
+        className={`${filtersOpen ? "grid" : "hidden"} grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center`}
+      >
+        <Input
+          placeholder="Buscar por título…"
+          aria-label="Buscar por título"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="hidden sm:block sm:max-w-xs"
         />
         <Select
           items={statusItems}
           value={statusFilter}
           onValueChange={(v) => setStatusFilter(v as "all" | TaskStatus)}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger aria-label="Filtrar por estado" className="w-full sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -151,7 +190,7 @@ export default function UiTaskPage() {
           value={priorityFilter}
           onValueChange={(v) => setPriorityFilter(v as "all" | TaskPriority)}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger aria-label="Filtrar por prioridad" className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -168,7 +207,7 @@ export default function UiTaskPage() {
           value={categoryFilter}
           onValueChange={(v) => setCategoryFilter(v ?? "all")}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger aria-label="Filtrar por categoría" className="col-span-2 w-full sm:col-span-1 sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -182,51 +221,17 @@ export default function UiTaskPage() {
         </Select>
       </div>
 
-      <UiTaskList
-        tasks={paged}
-        loading={loading}
-        selectedId={selected?.id ?? null}
-        onSelect={toggleSelect}
-      />
+      <div ref={tableRef}>
+        <UiTaskList
+          tasks={paged}
+          loading={loading}
+          selectedId={selected?.id ?? null}
+          onSelect={toggleSelect}
+          onOpen={setViewing}
+        />
+      </div>
 
-      {pageCount > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage((p) => Math.max(1, p - 1));
-                }}
-              />
-            </PaginationItem>
-            {Array.from({ length: pageCount }).map((_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
-                  href="#"
-                  isActive={current === i + 1}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setPage(i + 1);
-                  }}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage((p) => Math.min(pageCount, p + 1));
-                }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+      <UiPaginationControl page={current} pageCount={pageCount} onPageChange={setPage} />
 
       <UiTaskForm
         open={formOpen}
@@ -258,6 +263,15 @@ export default function UiTaskPage() {
         open={viewing !== null}
         onOpenChange={(open) => !open && setViewing(null)}
         task={viewing}
+        onEdit={canUpdate ? openEdit : undefined}
+        onDelete={
+          canDelete
+            ? (task) => {
+                setViewing(null);
+                setDeleting(task);
+              }
+            : undefined
+        }
       />
 
       <UiTaskTrash open={trashOpen} onOpenChange={setTrashOpen} onChanged={reload} />
