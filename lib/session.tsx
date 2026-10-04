@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-import { apiFetch, clearToken, getToken, setToken } from "@/lib/api";
+import { ApiError, apiFetch, clearToken, getToken, setToken } from "@/lib/api";
 
 export type RoleRef = {
   id: number;
@@ -15,6 +15,7 @@ export type User = {
   email?: string | null;
   role: RoleRef;
   permissions: string[];
+  email_verified?: boolean;
   birth_date?: string | null;
   age?: number | null;
   avatar?: string | null;
@@ -25,11 +26,14 @@ export type User = {
 type SessionValue = {
   user: User | null;
   loading: boolean;
+  loadError: boolean;
+  retry: () => void;
   isAdmin: boolean;
   hasPermission: (module: string, action: string) => boolean;
   login: (token: string, user: User) => void;
   updateUser: (patch: Partial<User>) => void;
   logout: () => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -37,6 +41,29 @@ const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+
+  // Solo un 401 invalida la sesión; un 429/500 o un corte de red no deben
+  // cerrar la sesión del usuario, solo permitir reintentar.
+  const loadUser = useCallback(() => {
+    const token = getToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError(false);
+    return apiFetch<User>("/me")
+      .then(setUser)
+      .catch((error) => {
+        if (error instanceof ApiError && error.status === 401) {
+          clearToken();
+        } else {
+          setLoadError(true);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     function handleUnauthorized() {
@@ -45,20 +72,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
 
     window.addEventListener("taskflow:unauthorized", handleUnauthorized);
-    void Promise.resolve().then(() => {
-      const token = getToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      return apiFetch<User>("/me")
-        .then(setUser)
-        .catch(() => clearToken())
-        .finally(() => setLoading(false));
-    });
+    void Promise.resolve().then(loadUser);
 
     return () => window.removeEventListener("taskflow:unauthorized", handleUnauthorized);
-  }, []);
+  }, [loadUser]);
 
   const login = useCallback((token: string, nextUser: User) => {
     setToken(token);
@@ -78,6 +95,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const resendVerificationEmail = useCallback(async () => {
+    await apiFetch("/email/verification-notification", { method: "POST" });
+  }, []);
+
   const hasPermission = useCallback(
     (module: string, action: string) => {
       if (!user) return false;
@@ -92,11 +113,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         loading,
+        loadError,
+        retry: loadUser,
         isAdmin: user?.role?.name === "admin",
         hasPermission,
         login,
         updateUser,
         logout,
+        resendVerificationEmail,
       }}
     >
       {children}

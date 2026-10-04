@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { UiModeToggle } from "@/components/UiModeToggle";
+import { UiLoadingSpinner } from "@/components/UiLoading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,16 +18,38 @@ import { loginSchema } from "@/app/modules/auth/schema";
 import { serviceAuthLogin } from "@/app/modules/auth/services";
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center p-4">
+          <UiLoadingSpinner />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+// `useSearchParams` obliga a envolver en Suspense para no bloquear el
+// prerender estático del resto de la página (ver Next.js docs).
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading, login: openSession } = useSession();
+
+  // Ruta a la que se intentaba acceder antes de que middleware.ts redirigiera
+  // a /login (ver middleware.ts: `?next=`). Solo se acepta una ruta interna.
+  const nextPath = searchParams.get("next");
+  const redirectTarget = nextPath?.startsWith("/") ? nextPath : null;
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
-  }, [loading, user, router]);
+    if (!loading && user) router.replace(redirectTarget ?? "/dashboard");
+  }, [loading, user, router, redirectTarget]);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,7 +66,7 @@ export default function LoginPage() {
       const { token, user: signedIn } = await serviceAuthLogin(parsed.data);
       openSession(token, signedIn);
       toast.success(`Hola de nuevo, ${signedIn.username}`);
-      router.replace(signedIn.role.name === "admin" ? "/admin" : "/dashboard");
+      router.replace(redirectTarget ?? (signedIn.role.name === "admin" ? "/admin" : "/dashboard"));
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         setErrors(apiFieldErrors(error.errors));
@@ -111,7 +134,10 @@ export default function LoginPage() {
               </Link>
             </p>
             <p className="text-center text-xs text-muted-foreground">
-              ¿Olvidaste tu contraseña? Contacta a un administrador para restablecerla.
+              ¿Olvidaste tu contraseña?{" "}
+              <Link href="/forgot-password" className="font-medium text-foreground underline-offset-4 hover:underline">
+                Recupérala
+              </Link>
             </p>
           </CardFooter>
         </form>

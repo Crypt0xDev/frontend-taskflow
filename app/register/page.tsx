@@ -25,10 +25,9 @@ export default function RegisterPage() {
   const { user, loading, login: openSession } = useSession();
   const [step, setStep] = useState<1 | 2>(1);
   const [created, setCreated] = useState<{ token: string; user: User } | null>(null);
-  const [form, setForm] = useState({ email: "", password: "", password_confirmation: "" });
+  const [form, setForm] = useState({ user_name: "", email: "", password: "", password_confirmation: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [username, setUsername] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [step2Error, setStep2Error] = useState<string | undefined>();
@@ -66,27 +65,23 @@ export default function RegisterPage() {
   async function finish() {
     if (!created) return;
     setStep2Error(undefined);
-    const trimmedName = username.trim();
-    if (trimmedName.length < 3) {
-      setStep2Error("Elige un nombre de usuario (mínimo 3 caracteres).");
-      return;
-    }
 
     setToken(created.token);
     let finalUser = created.user;
-    try {
-      finalUser = await serviceProfileUpdate({
-        user_name: trimmedName,
-        birth_date: birthDate || null,
-        avatar: avatar ?? null,
-      });
-    } catch (err) {
-      setStep2Error(err instanceof ApiError ? err.message : "No se pudo guardar el perfil.");
-      return;
+    if (birthDate || avatar) {
+      try {
+        finalUser = await serviceProfileUpdate({
+          birth_date: birthDate || null,
+          avatar: avatar ?? null,
+        });
+      } catch (err) {
+        setStep2Error(err instanceof ApiError ? err.message : "No se pudo guardar el perfil.");
+        return;
+      }
     }
 
     openSession(created.token, finalUser);
-    toast.success(`Cuenta creada. ¡Bienvenido, ${finalUser.username}!`);
+    toast.success(`Cuenta creada. Revisa ${finalUser.email} para verificar tu correo.`);
     router.replace("/dashboard");
   }
 
@@ -106,16 +101,29 @@ export default function RegisterPage() {
           <>
             <CardHeader>
               <CardTitle className="text-2xl">Crear cuenta</CardTitle>
-              <CardDescription>Paso 1 de 2 · tu correo y una contraseña.</CardDescription>
+              <CardDescription>Paso 1 de 2 · tu usuario, correo y una contraseña.</CardDescription>
             </CardHeader>
             <form onSubmit={onSubmitStep1} noValidate>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="user_name">Nombre de usuario</Label>
+                  <Input
+                    id="user_name"
+                    autoComplete="username"
+                    placeholder="¿Cómo quieres que te llamemos?"
+                    value={form.user_name}
+                    onChange={(e) => setForm((f) => ({ ...f, user_name: e.target.value }))}
+                    aria-invalid={!!errors.user_name}
+                  />
+                  {errors.user_name && <p className="text-sm text-destructive">{errors.user_name}</p>}
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Correo</Label>
                   <Input
                     id="email"
                     type="email"
                     autoComplete="email"
+                    placeholder="tu-correo@ejemplo.com"
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     aria-invalid={!!errors.email}
@@ -168,19 +176,9 @@ export default function RegisterPage() {
           <>
             <CardHeader>
               <CardTitle className="text-2xl">Personaliza tu perfil</CardTitle>
-              <CardDescription>Paso 2 de 2 · tu nombre, fecha de nacimiento y avatar (opcional).</CardDescription>
+              <CardDescription>Paso 2 de 2 · fecha de nacimiento y avatar (opcional).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="username">Nombre de usuario</Label>
-                <Input
-                  id="username"
-                  autoComplete="username"
-                  placeholder="¿Cómo quieres que te llamemos?"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="birth_date">Fecha de nacimiento</Label>
                 <Input
