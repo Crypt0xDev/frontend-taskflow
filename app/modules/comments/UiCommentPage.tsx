@@ -35,7 +35,7 @@ export default function UiCommentPage({ initial }: { initial: Comment[] }) {
           <UiCommentForm onPost={post} />
         ) : (
           <div className="rounded-3xl border border-ink-100 bg-surface p-5 text-center text-ink-600 shadow-soft">
-            <Link href="/login" className="font-semibold text-brand-600 hover:underline">
+            <Link href="/login" className="font-semibold text-brand-700 dark:text-brand-400 hover:underline">
               Inicia sesión
             </Link>{" "}
             para dejar un comentario.

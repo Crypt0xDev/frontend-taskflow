@@ -43,7 +43,7 @@ export default function UiCommentModeration() {
         placeholder="Buscar por autor o contenido…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="max-w-xs"
+        className="w-full sm:max-w-xs"
       />
 
       {loading ? (
@@ -60,38 +60,68 @@ export default function UiCommentModeration() {
           </p>
         </div>
       ) : (
-        <div className="animate-fade-up rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-48">Autor</TableHead>
-                <TableHead>Comentario</TableHead>
-                <TableHead className="w-40">Fecha</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {comments.map((c) => (
-                  <UiSelectableRow key={c.id} selected={isSelected(c)} onSelect={() => toggle(c)}>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <Avatar className="size-8">
-                          <AvatarFallback className="bg-muted text-xs font-bold">
-                            {(c.author?.username ?? "?").charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{c.author?.username ?? "Anónimo"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <span className="line-clamp-2">{c.body}</span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDateTime(c.created_at)}
-                    </TableCell>
-                  </UiSelectableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="animate-fade-up space-y-2 sm:space-y-0">
+          {/* Móvil: tarjetas apiladas, sin scroll lateral */}
+          <div className="space-y-2 sm:hidden">
+            {comments.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => toggle(c)}
+                data-state={isSelected(c) ? "selected" : undefined}
+                className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Avatar className="size-8 shrink-0">
+                    <AvatarFallback className="bg-muted text-xs font-bold">
+                      {(c.author?.username ?? "?").charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="min-w-0 flex-1 truncate font-medium">
+                    {c.author?.username ?? "Anónimo"}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {formatDateTime(c.created_at)}
+                  </span>
+                </div>
+                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{c.body}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet y superior: tabla */}
+          <div className="hidden rounded-md border sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-48">Autor</TableHead>
+                  <TableHead>Comentario</TableHead>
+                  <TableHead className="w-40">Fecha</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {comments.map((c) => (
+                    <UiSelectableRow key={c.id} selected={isSelected(c)} onSelect={() => toggle(c)}>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="size-8">
+                            <AvatarFallback className="bg-muted text-xs font-bold">
+                              {(c.author?.username ?? "?").charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{c.author?.username ?? "Anónimo"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <span className="line-clamp-2">{c.body}</span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDateTime(c.created_at)}
+                      </TableCell>
+                    </UiSelectableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
