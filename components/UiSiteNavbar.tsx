@@ -53,15 +53,24 @@ export function UiSiteNavbar() {
 
         <div className="flex items-center gap-2">
           <UiModeToggle />
+
+          {/* Móvil: un solo CTA a /login; ahí ya está el enlace para crear cuenta. */}
           <Link
             href="/login"
-            className="rounded-full px-4 py-2 text-sm font-semibold text-ink-600 transition hover:text-ink-900"
+            className="rounded-full bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-800 sm:hidden"
+          >
+            Empezar
+          </Link>
+
+          <Link
+            href="/login"
+            className="hidden rounded-full px-4 py-2 text-sm font-semibold text-ink-600 transition hover:text-ink-900 sm:block"
           >
             Iniciar sesión
           </Link>
           <Link
             href="/register"
-            className="rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-600"
+            className="hidden rounded-full bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-brand transition hover:-translate-y-0.5 hover:bg-brand-800 sm:block"
           >
             Empezar
           </Link>

@@ -11,9 +11,10 @@ type ViewSheetProps = {
   description?: string;
   empty?: ReactNode;
   children?: ReactNode;
+  footer?: ReactNode;
 };
 
-export function UiViewSheet({ open, onOpenChange, title, description, empty, children }: ViewSheetProps) {
+export function UiViewSheet({ open, onOpenChange, title, description, empty, children, footer }: ViewSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="overflow-y-auto border-l sm:max-w-md">
@@ -26,6 +27,7 @@ export function UiViewSheet({ open, onOpenChange, title, description, empty, chi
         ) : (
           <p className="px-4 pt-4 text-sm text-muted-foreground">{empty}</p>
         )}
+        {footer && <div className="mt-auto flex gap-2 border-t p-4">{footer}</div>}
       </SheetContent>
     </Sheet>
   );
