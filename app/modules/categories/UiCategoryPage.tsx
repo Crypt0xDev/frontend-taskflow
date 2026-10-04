@@ -8,6 +8,7 @@ import { useRowSelection } from "@/hooks/useRowSelection";
 import { useTrash } from "@/hooks/useTrash";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
+import { UiLoadError } from "@/components/UiLoadError";
 import { UiSelectableRow } from "@/components/UiSelectableRow";
 import { UiTrashSheet } from "@/components/UiTrashSheet";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import { UiCategoryForm } from "./ui/UiCategoryForm";
 import { UiCategoryView } from "./ui/UiCategoryView";
 
 export default function UiCategoryPage() {
-  const { categories, loading, reload } = useCategoryList();
+  const { categories, loading, error, reload } = useCategoryList();
   const { create } = useCategoryCreate();
   const { update } = useCategoryUpdate();
   const { remove } = useCategoryDelete();
@@ -77,6 +78,7 @@ export default function UiCategoryPage() {
   }
 
   function openEdit(category: Category) {
+    setViewing(null);
     setEditing(category);
     setFormOpen(true);
   }
@@ -97,6 +99,7 @@ export default function UiCategoryPage() {
         onEdit={canUpdate ? () => selected && openEdit(selected) : undefined}
         onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
         onCreate={canCreate ? openCreate : undefined}
+        hideSelectionActionsOnMobile
         end={
           canDelete ? (
             <Button variant="outline" onClick={() => setTrashOpen(true)}>
@@ -136,6 +139,8 @@ export default function UiCategoryPage() {
             <Skeleton key={i} className="h-10" />
           ))}
         </div>
+      ) : error && categories.length === 0 ? (
+        <UiLoadError message="No se pudieron cargar las categorías." onRetry={reload} />
       ) : filtered.length === 0 ? (
         <div className="animate-fade-up rounded-md border p-10 text-center">
           <p className="font-medium">
@@ -154,11 +159,11 @@ export default function UiCategoryPage() {
             {filtered.map((category) => {
               const count = category.tasks_count ?? 0;
               return (
-                <div
+                <button
+                  type="button"
                   key={category.id}
-                  onClick={() => toggle(category)}
-                  data-state={isSelected(category) ? "selected" : undefined}
-                  className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+                  onClick={() => setViewing(category)}
+                  className="block w-full rounded-md border p-3 text-left transition-colors active:bg-muted"
                 >
                   <div className="flex items-center gap-2">
                     <span
@@ -176,7 +181,7 @@ export default function UiCategoryPage() {
                     <span>{count} {count === 1 ? "tarea" : "tareas"}</span>
                     <span>{formatDateTime(category.created_at)}</span>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -239,6 +244,19 @@ export default function UiCategoryPage() {
         open={viewing !== null}
         onOpenChange={(open) => !open && setViewing(null)}
         category={viewing}
+        actions={
+          viewing
+            ? {
+                onEdit: canUpdate ? () => openEdit(viewing) : undefined,
+                onDelete: canDelete
+                  ? () => {
+                      setViewing(null);
+                      setDeleting(viewing);
+                    }
+                  : undefined,
+              }
+            : undefined
+        }
       />
 
       <UiTrashSheet

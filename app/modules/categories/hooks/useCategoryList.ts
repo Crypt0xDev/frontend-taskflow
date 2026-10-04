@@ -16,12 +16,15 @@ function byName(a: Category, b: Category) {
 export function useCategoryList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       setCategories((await serviceCategoryList()).sort(byName));
     } catch (error) {
+      setError(true);
       toast.error(
         error instanceof ApiError
           ? error.message
@@ -36,5 +39,5 @@ export function useCategoryList() {
     deferMicrotask(load);
   }, [load]);
 
-  return { categories, loading, reload: load };
+  return { categories, loading, error, reload: load };
 }

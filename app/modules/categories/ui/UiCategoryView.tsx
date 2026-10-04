@@ -1,6 +1,6 @@
 "use client";
 
-import { UiViewField, UiViewSheet } from "@/components/UiViewSheet";
+import { UiViewField, UiViewSheet, type ViewSheetActions } from "@/components/UiViewSheet";
 import { formatDateTime } from "@/lib/utils";
 
 import type { Category } from "../type";
@@ -9,9 +9,10 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category: Category | null;
+  actions?: ViewSheetActions;
 };
 
-export function UiCategoryView({ open, onOpenChange, category }: Props) {
+export function UiCategoryView({ open, onOpenChange, category, actions }: Props) {
   const count = category?.tasks_count ?? 0;
 
   return (
@@ -21,6 +22,7 @@ export function UiCategoryView({ open, onOpenChange, category }: Props) {
       title="Detalle de la categoría"
       description="Información completa de la categoría."
       empty={category ? undefined : "No se encontró la categoría."}
+      actions={actions}
     >
       {category && (
         <>
