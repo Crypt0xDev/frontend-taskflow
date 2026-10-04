@@ -77,29 +77,54 @@ export default function UiRolePage() {
           ))}
         </div>
       ) : (
-        <div className="animate-fade-up rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Rol</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Permisos</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roles.map((role) => (
-                <UiSelectableRow key={role.id} selected={isSelected(role)} onSelect={() => toggle(role)}>
-                  <TableCell className="font-medium capitalize">{role.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{role.description ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {role.permissions_count ?? role.permissions.length}
-                    </Badge>
-                  </TableCell>
-                </UiSelectableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="animate-fade-up space-y-2 sm:space-y-0">
+          {/* Móvil: tarjetas apiladas, sin scroll lateral */}
+          <div className="space-y-2 sm:hidden">
+            {roles.map((role) => (
+              <div
+                key={role.id}
+                onClick={() => toggle(role)}
+                data-state={isSelected(role) ? "selected" : undefined}
+                className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 flex-1 truncate font-medium capitalize">{role.name}</span>
+                  <Badge variant="secondary" className="shrink-0">
+                    {role.permissions_count ?? role.permissions.length}
+                  </Badge>
+                </div>
+                {role.description && (
+                  <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{role.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet y superior: tabla */}
+          <div className="hidden rounded-md border sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Rol</TableHead>
+                  <TableHead className="hidden sm:table-cell">Descripción</TableHead>
+                  <TableHead>Permisos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.map((role) => (
+                  <UiSelectableRow key={role.id} selected={isSelected(role)} onSelect={() => toggle(role)}>
+                    <TableCell className="font-medium capitalize">{role.name}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{role.description ?? "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {role.permissions_count ?? role.permissions.length}
+                      </Badge>
+                    </TableCell>
+                  </UiSelectableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
@@ -125,7 +150,7 @@ export default function UiRolePage() {
                 <ul className="mt-1 space-y-1">
                   {perms.map((p) => (
                     <li key={p.id} className="flex items-baseline gap-2">
-                      <span className="font-mono text-xs text-brand-600">{p.name}</span>
+                      <span className="font-mono text-xs text-brand-700 dark:text-brand-400">{p.name}</span>
                       <span className="text-muted-foreground">{p.description}</span>
                     </li>
                   ))}
