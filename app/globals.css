@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "tailwind-animations";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -169,7 +170,7 @@
   --font-display: var(--font-bricolage), var(--font-sans), ui-sans-serif, sans-serif;
 
   --animate-fade-up: fade-up 0.6s ease-out both;
-  --animate-float: float 5s ease-in-out infinite;
+  --animate-float-soft: float-soft 5s ease-in-out infinite;
   --animate-aurora: aurora 60s linear infinite;
 }
 
@@ -197,7 +198,7 @@
   }
 }
 
-@keyframes float {
+@keyframes float-soft {
   0%,
   100% {
     transform: translateY(0);
@@ -234,5 +235,22 @@
     --ink-800: 233 237 235;
     --ink-900: 245 247 246;
     --surface: 30 38 34;
+  }
+}
+
+/* Respeta "reducir movimiento" del sistema: las animaciones terminan al instante.
+   Va en @layer base a propósito: entre reglas !important gana la capa más temprana,
+   y así se impone al `animation-timeline: … !important` de tailwind-animations (capa utilities). */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      animation-timeline: auto !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

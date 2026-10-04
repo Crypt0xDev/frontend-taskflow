@@ -35,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-ink-50 text-ink-900">
         <UiThemeProvider>
           <SessionProvider>{children}</SessionProvider>
-          <Toaster position="bottom-right" />
+          <Toaster position="bottom-right" mobileOffset={{ bottom: 72 }} />
         </UiThemeProvider>
       </body>
     </html>
