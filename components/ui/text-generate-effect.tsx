@@ -28,7 +28,6 @@ export const TextGenerateEffect = ({
         delay: stagger(0.2),
       }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run the reveal once on mount
   }, []);
 
   return (

@@ -1,16 +1,21 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-export function useRowSelection<T extends { id: number }>() {
-  const [selected, setSelected] = useState<T | null>(null);
+export function useRowSelection<T extends { id: number }>(rows: T[]) {
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const selected = useMemo(
+    () => (selectedId === null ? null : rows.find((row) => row.id === selectedId) ?? null),
+    [rows, selectedId],
+  );
 
   const toggle = useCallback(
-    (row: T) => setSelected((prev) => (prev?.id === row.id ? null : row)),
+    (row: T) => setSelectedId((prev) => (prev === row.id ? null : row.id)),
     [],
   );
 
-  const clear = useCallback(() => setSelected(null), []);
+  const clear = useCallback(() => setSelectedId(null), []);
 
   const isSelected = useCallback((row: T) => row.id === selected?.id, [selected]);
 
