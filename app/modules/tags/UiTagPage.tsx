@@ -100,14 +100,14 @@ export default function UiTagPage() {
           placeholder="Buscar por nombre o descripción…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="max-w-xs"
+          className="min-w-0 flex-1 sm:max-w-xs"
         />
         <Select
           items={{ all: "Todas", used: "Con tareas", unused: "Sin tareas" }}
           value={usage}
           onValueChange={(v) => setUsage(v as "all" | "used" | "unused")}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger aria-label="Filtrar por uso" className="w-32 shrink-0 sm:w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -136,39 +136,71 @@ export default function UiTagPage() {
           </p>
         </div>
       ) : (
-        <div className="animate-fade-up rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Tareas</TableHead>
-                <TableHead>Creada</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((tag) => (
-                <UiSelectableRow key={tag.id} selected={isSelected(tag)} onSelect={() => toggle(tag)}>
-                  <TableCell className="font-medium">
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="size-3 shrink-0 rounded-full border"
-                        style={{ backgroundColor: tag.color ?? "transparent" }}
-                      />
-                      {tag.name}
-                    </span>
-                  </TableCell>
-                  <TableCell className="max-w-xs text-muted-foreground">
-                    <span className="line-clamp-1">{tag.description ?? "—"}</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{tag.tasks_count ?? 0}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDateTime(tag.created_at)}
-                  </TableCell>
-                </UiSelectableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="animate-fade-up space-y-2 sm:space-y-0">
+          {/* Móvil: tarjetas apiladas, sin scroll lateral */}
+          <div className="space-y-2 sm:hidden">
+            {filtered.map((tag) => (
+              <div
+                key={tag.id}
+                onClick={() => toggle(tag)}
+                data-state={isSelected(tag) ? "selected" : undefined}
+                className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="size-3 shrink-0 rounded-full border"
+                    style={{ backgroundColor: tag.color ?? "transparent" }}
+                  />
+                  <span className="min-w-0 flex-1 truncate font-medium">{tag.name}</span>
+                </div>
+                {tag.description && (
+                  <p className="mt-1 line-clamp-1 pl-5 text-sm text-muted-foreground">
+                    {tag.description}
+                  </p>
+                )}
+                <div className="mt-2 flex items-center justify-between pl-5 text-xs text-muted-foreground">
+                  <span>{tag.tasks_count ?? 0} tareas</span>
+                  <span>{formatDateTime(tag.created_at)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet y superior: tabla */}
+          <div className="hidden rounded-md border sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead className="hidden sm:table-cell">Descripción</TableHead>
+                  <TableHead>Tareas</TableHead>
+                  <TableHead className="hidden md:table-cell">Creada</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((tag) => (
+                  <UiSelectableRow key={tag.id} selected={isSelected(tag)} onSelect={() => toggle(tag)}>
+                    <TableCell className="font-medium">
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="size-3 shrink-0 rounded-full border"
+                          style={{ backgroundColor: tag.color ?? "transparent" }}
+                        />
+                        <span>{tag.name}</span>
+                      </span>
+                    </TableCell>
+                    <TableCell className="hidden max-w-xs text-muted-foreground sm:table-cell">
+                      <span className="line-clamp-1">{tag.description ?? "—"}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{tag.tasks_count ?? 0}</TableCell>
+                    <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
+                      {formatDateTime(tag.created_at)}
+                    </TableCell>
+                  </UiSelectableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
