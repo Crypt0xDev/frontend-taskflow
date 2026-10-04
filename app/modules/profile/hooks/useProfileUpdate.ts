@@ -23,7 +23,6 @@ export function useProfileUpdate() {
     if (user) form.reset({ username: user.username, email: user.email ?? "", current_password: "" });
   }, [user, form]);
 
-  // Cambiar el correo exige la contraseña actual (el backend lo verifica).
   const emailChanged =
     (useWatch({ control: form.control, name: "email" }) ?? "").trim().toLowerCase() !== (user?.email ?? "").trim().toLowerCase();
 

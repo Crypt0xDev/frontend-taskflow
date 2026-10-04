@@ -14,7 +14,6 @@ export function useProfileDelete() {
   const remove = useCallback(
     async (values: DeleteAccountValues) => {
       const { message } = await serviceProfileDelete(values);
-      // El token ya no existe en el servidor: limpia la sesión local.
       await logout();
       toast.success(message);
     },

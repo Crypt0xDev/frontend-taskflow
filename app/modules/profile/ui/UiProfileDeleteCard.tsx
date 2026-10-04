@@ -17,7 +17,6 @@ import { setFormApiErrors } from "@/lib/form";
 import { useProfileDelete } from "../hooks/useProfileDelete";
 import { deleteAccountSchema, type DeleteAccountValues } from "../schema";
 
-/** Zona de peligro del perfil: eliminación definitiva de la cuenta (con contraseña). */
 export function UiProfileDeleteCard() {
   const { remove } = useProfileDelete();
   const [open, setOpen] = useState(false);
@@ -33,7 +32,6 @@ export function UiProfileDeleteCard() {
 
   async function handleSubmit(values: DeleteAccountValues) {
     try {
-      // Al cerrarse la sesión, el layout de la app redirige a /login (donde se ve el aviso).
       await remove(values);
     } catch (err) {
       if (!setFormApiErrors(form, err)) {
