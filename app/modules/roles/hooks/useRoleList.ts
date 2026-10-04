@@ -13,12 +13,15 @@ import type { Role } from "../type/typeRoleBase";
 export function useRoleList() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       setRoles(await serviceRoleList());
     } catch (error) {
+      setError(true);
       toast.error(error instanceof ApiError ? error.message : "No se pudieron cargar los roles.");
     } finally {
       setLoading(false);
@@ -40,5 +43,5 @@ export function useRoleList() {
     }
   }, []);
 
-  return { roles, loading, reload: load, remove };
+  return { roles, loading, error, reload: load, remove };
 }

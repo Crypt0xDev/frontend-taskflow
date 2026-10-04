@@ -5,6 +5,7 @@ import { useState } from "react";
 import { UiActionToolbar } from "@/components/UiActionToolbar";
 import { UiConfirmDialog } from "@/components/UiConfirmDialog";
 import { UiHeaderModule } from "@/components/UiHeaderModule";
+import { UiLoadError } from "@/components/UiLoadError";
 import { UiSelectableRow } from "@/components/UiSelectableRow";
 import { UiViewField, UiViewSheet } from "@/components/UiViewSheet";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ function byModule(permissions: Permission[]): Record<string, Permission[]> {
 }
 
 export default function UiRolePage() {
-  const { roles, loading, reload, remove } = useRoleList();
+  const { roles, loading, error, reload, remove } = useRoleList();
   const { permissions } = usePermissionList();
   const { hasPermission } = useSession();
   const { selected, hasSelection, toggle, clear, isSelected } = useRowSelection<Role>();
@@ -50,6 +51,7 @@ export default function UiRolePage() {
   }
 
   function openEdit(role: Role) {
+    setViewing(null);
     setEditing(role);
     setFormOpen(true);
   }
@@ -68,6 +70,7 @@ export default function UiRolePage() {
         onDelete={canDelete ? () => selected && setDeleting(selected) : undefined}
         onCreate={canCreate ? openCreate : undefined}
         deleteDisabled={selectedIsSystem}
+        hideSelectionActionsOnMobile
       />
 
       {loading ? (
@@ -76,16 +79,18 @@ export default function UiRolePage() {
             <Skeleton key={i} className="h-10" />
           ))}
         </div>
+      ) : error && roles.length === 0 ? (
+        <UiLoadError message="No se pudieron cargar los roles." onRetry={reload} />
       ) : (
         <div className="animate-fade-up space-y-2 sm:space-y-0">
           {/* Móvil: tarjetas apiladas, sin scroll lateral */}
           <div className="space-y-2 sm:hidden">
             {roles.map((role) => (
-              <div
+              <button
+                type="button"
                 key={role.id}
-                onClick={() => toggle(role)}
-                data-state={isSelected(role) ? "selected" : undefined}
-                className="cursor-pointer rounded-md border p-3 data-[state=selected]:bg-muted"
+                onClick={() => setViewing(role)}
+                className="block w-full rounded-md border p-3 text-left transition-colors active:bg-muted"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 flex-1 truncate font-medium capitalize">{role.name}</span>
@@ -96,7 +101,7 @@ export default function UiRolePage() {
                 {role.description && (
                   <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{role.description}</p>
                 )}
-              </div>
+              </button>
             ))}
           </div>
 
@@ -142,6 +147,20 @@ export default function UiRolePage() {
         title={viewing ? `Rol: ${viewing.name}` : "Rol"}
         description={viewing?.description ?? undefined}
         empty={viewing ? undefined : "No se encontró el rol."}
+        actions={
+          viewing
+            ? {
+                onEdit: canUpdate ? () => openEdit(viewing) : undefined,
+                onDelete: canDelete
+                  ? () => {
+                      setViewing(null);
+                      setDeleting(viewing);
+                    }
+                  : undefined,
+                deleteDisabled: SYSTEM_ROLES.includes(viewing.name),
+              }
+            : undefined
+        }
       >
         {viewing && (
           <>
