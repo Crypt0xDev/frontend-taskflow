@@ -1,4 +1,4 @@
-import { API_URL, REQUEST_TIMEOUT_MS, TOKEN_KEY } from '@/config/constants';
+import { API_URL, REQUEST_TIMEOUT_MS, SESSION_FLAG_COOKIE, TOKEN_KEY } from '@/config/constants';
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -12,12 +12,16 @@ export function getToken(): string | null {
 export function setToken(token: string): void {
   try {
     localStorage.setItem(TOKEN_KEY, token);
+    // Cookie liviana (sin el token) para que middleware.ts pueda proteger
+    // rutas en el servidor y evitar el parpadeo de páginas protegidas.
+    document.cookie = `${SESSION_FLAG_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
   } catch {}
 }
 
 export function clearToken(): void {
   try {
     localStorage.removeItem(TOKEN_KEY);
+    document.cookie = `${SESSION_FLAG_COOKIE}=; path=/; max-age=0; samesite=lax`;
   } catch {}
 }
 
@@ -77,6 +81,10 @@ export async function apiFetch<T = unknown>(
       .get('content-type')
       ?.includes('application/json');
     const data = isJson ? await res.json() : null;
+
+    if (res.status === 429) {
+      throw new ApiError('Demasiadas solicitudes. Espera unos segundos e intenta de nuevo.', 429);
+    }
 
     if (!res.ok) {
       throw new ApiError(
